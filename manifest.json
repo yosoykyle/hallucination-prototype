@@ -1,0 +1,18 @@
+{
+  "name": "AI Hallucination Prototype",
+  "short_name": "HallucinationLab",
+  "description": "Induce, analyze, and visualize AI hallucinations across multiple models",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0F0F11",
+  "theme_color": "#8B6FE8",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%238B6FE8' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>⬡</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["developer", "education", "utilities"]
+}

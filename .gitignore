@@ -1,0 +1,35 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+# Not needed — libraries are loaded from CDN (see index.html).
+# If you run `npm install` locally for any reason, this keeps it out of git.
+node_modules/
+
+# ── API Keys (IMPORTANT) ───────────────────────────────────────────────────────
+# user-config.js holds your personal API keys and is intentionally excluded.
+# Copy js/user-config.example.js → js/user-config.js and add your own keys.
+# NEVER commit a file containing real API keys to any repository.
+js/user-config.js
+
+# ── macOS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Windows ────────────────────────────────────────────────────────────────────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ── Editors ────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+*.user
+
+# ── Logs ───────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
