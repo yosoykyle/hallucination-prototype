@@ -1330,7 +1330,7 @@ button:active:not(:disabled) {
   border: 1px solid var(--border);
   border-radius: var(--r);
   width: 200px;
-  z-index: 60;
+  z-index: 150;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   animation: fadeIn var(--transition-fast);
@@ -2139,6 +2139,7 @@ input[type="range"] {
 /* ── Export dropdown ────────────────────────────────────────────── */
 .export-wrap {
   position: relative;
+  z-index: 100;
   display: inline-block;
 }
 
@@ -2150,7 +2151,7 @@ input[type="range"] {
   border: 1px solid var(--border);
   border-radius: var(--r);
   width: 200px;
-  z-index: 60;
+  z-index: 110;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   animation: fadeIn var(--transition-fast);
@@ -4452,6 +4453,7 @@ input[type="range"] {
 /* ── Dropdown menus ─────────────────────────────────────────────── */
 .dropdown-wrap {
   position: relative;
+  z-index: 100;
   display: inline-block;
 }
 
@@ -4463,7 +4465,7 @@ input[type="range"] {
   border: 1px solid var(--border);
   border-radius: var(--r);
   width: 200px;
-  z-index: 60;
+  z-index: 110;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   animation: fadeIn var(--transition-fast);
