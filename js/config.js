@@ -141,7 +141,7 @@ const EDUCATIONAL_CONTENT = {
   scores: [
     { title: 'Accuracy Confidence', body: 'How likely the analyst AI believes the sentence is factually correct (0–100%). Above threshold = accurate; near threshold = uncertain; below threshold = likely hallucination. This is the analyst\'s judgment based on its own training knowledge — not verified ground truth.' },
     { title: 'Analyst Certainty', body: 'How confident the analyst is in its own assessment. A sentence can score 20% accuracy with only 55% analyst certainty — meaning the analyst suspects it is wrong but is not fully sure. Both scores together describe the reliability of the assessment, not just the sentence.' },
-    { title: 'Hallucination Threshold', body: 'The slider controlling where "uncertain" ends and "hallucination" begins. Default 60%. Moving it left catches more things as hallucinations; right is more conservative. This demonstrates that hallucination detection is a threshold decision, not a binary truth.' },
+    { title: 'Hallucination Threshold', body: 'The slider controlling where "uncertain" ends and "hallucination" begins. Default 60%. Moving left is more conservative (flags fewer as hallucinations); right catches more potential hallucinations. This demonstrates that hallucination detection is a threshold decision, not a binary truth.' },
     { title: 'Pre-Scan Risk Badges', body: 'Client-side structural analysis that runs before the AI analyst. Flags sentences containing dates, statistics, named entities, superlatives, causal claims, or high specificity — all structural features that correlate with higher hallucination risk.' },
   ],
 

@@ -73,9 +73,14 @@ function computeRunAnalytics(result, manualOverrides) {
     return ov ? { ...s, is_hallucination: ov === 'hallucination', _overridden: true } : s;
   });
 
+  const isHalluc = (s) => getEffectiveLevel(s, result.id) === 'low';
+  const isAccurate = (s) => getEffectiveLevel(s, result.id) === 'high';
+  const isUncertain = (s) => s.verifiable && getEffectiveLevel(s, result.id) === 'mid';
+
   const verifiable   = resolved.filter(s => s.verifiable);
-  const hallucinated = verifiable.filter(s => s.is_hallucination);
-  const accurate     = verifiable.filter(s => !s.is_hallucination);
+  const hallucinated = verifiable.filter(s => isHalluc(s));
+  const accurate     = verifiable.filter(s => isAccurate(s));
+  const uncertain    = verifiable.filter(s => isUncertain(s));
   const unverifiable = resolved.filter(s => !s.verifiable);
 
   const avgAccuracy  = verifiable.length ? Math.round(verifiable.reduce((a,s) => a+(s.accuracy_confidence||0),0) / verifiable.length) : 0;
@@ -90,6 +95,7 @@ function computeRunAnalytics(result, manualOverrides) {
   return {
     total: sentences.length, verifiable: verifiable.length,
     hallucinated: hallucinated.length, accurate: accurate.length,
+    uncertain: uncertain.length,
     unverifiable: unverifiable.length,
     overrideCount: resolved.filter(s=>s._overridden).length,
     avgAccuracy, avgCertainty, catBreakdown, riskFrequency,

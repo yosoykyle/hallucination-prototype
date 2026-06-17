@@ -331,7 +331,7 @@ function renderComparisonBar() {
     let stat = '';
     if (r.status === 'loading') stat = `<span class="model-card-stat mono" style="color:var(--text-muted)">…</span>`;
     else if (r.status === 'error') stat = `<span class="model-card-stat" style="color:var(--c-red-tx)">Failed</span>`;
-    else if (r.analysis) { const a = computeRunAnalytics(r, STATE.manualOverrides); stat = `<span class="model-card-stat" style="color:${a && a.hallucinated > 0 ? 'var(--c-red-tx)' : 'var(--c-green-tx)'}">${a ? a.hallucinated : 0}/${a ? a.verifiable : 0} hallucinated</span>`; }
+    else if (r.analysis) { const a = computeRunAnalytics(r, STATE.manualOverrides); stat = `<span class="model-card-stat" style="color:${a && a.hallucinated > 0 ? 'var(--c-red-tx)' : 'var(--c-green-tx)'}">${a ? a.hallucinated : 0}/${a ? a.verifiable : 0} hallucinated</span><div class="model-card-sub" style="font-size:.5625rem;color:var(--text-muted);margin-top:1px">${a ? `✔${a.accurate} · ~${a.uncertain} · ✘${a.hallucinated}` : ''}</div>`; }
     else stat = `<span class="model-card-stat" style="color:var(--c-amber-tx)">Analysis failed</span>`;
     return `<div class="model-card ${active ? 'active' : ''} ${r.status === 'error' ? 'errored' : ''}" data-action="select-result" data-result-id="${r.id}" role="tab" aria-selected="${active}" aria-controls="mode-panel" id="tab-${r.id}">
       <div class="model-card-name">${escHtml(r.name)}</div>
@@ -343,10 +343,10 @@ function renderComparisonBar() {
 function renderThresholdSlider() {
   const v = STATE.confidenceThreshold;
   return `<div class="threshold-strip">
-    <span class="threshold-label">Hallucination threshold${tip('Controls where "uncertain" ends and "hallucination" begins. Moving left catches more things as hallucinations; right is more conservative.')}</span>
+    <span class="threshold-label">Hallucination threshold${tip('Controls where uncertainty ends and hallucination begins — the boundary for flagging a sentence. Moving left is more conservative (flags fewer as hallucinations); right catches more potential hallucinations.')}</span>
     <input type="range" min="${THRESHOLD_MIN}" max="${THRESHOLD_MAX}" value="${v}" style="flex:1" oninput="handleThresholdChange(this.value)" aria-label="Hallucination threshold" aria-valuemin="${THRESHOLD_MIN}" aria-valuemax="${THRESHOLD_MAX}" aria-valuenow="${v}" />
     <span class="threshold-value" aria-live="polite">${v}%</span>
-    <span class="threshold-note">Below&nbsp;${v}% = hallucination</span>
+    <span class="threshold-note">Below&nbsp;${v}% = hallucination &nbsp;·&nbsp; <span style="opacity:.7">← conservative &nbsp; catches more →</span></span>
   </div>`;
 }
 
@@ -380,6 +380,7 @@ function renderInducer(result) {
   return `<div class="stats-row fade-in" style="animation-delay:0ms">
     <div class="stat-card"><div class="stat-value">${a.total}</div><div class="stat-label">sentences</div></div>
     <div class="stat-card"><div class="stat-value" style="color:${a.hallucinated > 0 ? 'var(--c-red)' : 'var(--c-green)'}">${a.hallucinated}</div><div class="stat-label">hallucinations</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--c-amber)">${a.uncertain}</div><div class="stat-label">uncertain</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--c-green)">${a.accurate}</div><div class="stat-label">accurate</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--c-gray-tx)">${a.unverifiable}</div><div class="stat-label">cannot assess</div></div>
   </div>
@@ -503,8 +504,7 @@ function renderAnalyticsTab(result) {
   </div></div>
   ${Object.keys(catBreakdown).length > 0 ? `<div class="analytics-section fade-in"><div class="analytics-title">Hallucination Categories</div><div class="cat-bar-list">${catRows}</div></div>` : ''}
   ${Object.keys(riskFrequency).length > 0 ? `<div class="analytics-section fade-in"><div class="analytics-title">Pre-Scan Risk Factors Detected</div><p style="font-size:.75rem;color:var(--text-muted);margin-bottom:.625rem;line-height:1.5">Client-side structural scan across all ${total} sentences — before the AI analyst ran.</p><div class="risk-freq-list">${riskBadges}</div></div>` : ''}
-  ${compTable}
-  <div class="analytics-section fade-in"><div class="analytics-title">Historical Trend</div><div id="trend-${result.id}" class="viz-container" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;min-height:120px"></div></div>`;
+  ${compTable}`;
 }
 
 // ── Visualization Tab ────────────────────────────────────────────────────────
@@ -882,30 +882,55 @@ function renderVerificationContent() {
     return `<div class="viz-loading fade-in">Verifying claims via web search…</div>${skeleton('sentence', 3)}`;
   }
 
-  if (!STATE.verificationResults) {
+  const results = (typeof collectVerificationResults === 'function') ? collectVerificationResults() : (STATE.verificationResults || []);
+  const hasAny = results.length > 0;
+
+  if (!STATE.verificationResults && !hasAny) {
     return `<div class="hist-empty fade-in">No verification results yet.<br><span style="font-size:.75rem">Click Verify to check flagged sentences against web sources.</span></div>`;
   }
 
-  const results = STATE.verificationResults;
   const verifiedCount = results.filter(r => r.verified === true).length;
   const refutedCount = results.filter(r => r.verified === false).length;
-  const unknownCount = results.filter(r => r.verified === null).length;
+  const unknownCount = results.filter(r => r.verified === null && !r._isUnverified).length;
+  const uncheckedCount = results.filter(r => r._isUnverified).length;
+  const totalSentences = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId)?.analysis?.length || 0;
+  const verifiableCount = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId)?.analysis?.filter(s => s.verifiable).length || 0;
 
   return `
   <div class="verify-summary fade-in" style="display:flex;gap:.5rem;margin-bottom:1rem">
     <div class="stat-card"><div class="stat-value" style="color:var(--c-green-tx)">${verifiedCount}</div><div class="stat-label">Supported</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--c-red-tx)">${refutedCount}</div><div class="stat-label">Refuted</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--c-gray-tx)">${unknownCount}</div><div class="stat-label">Uncertain</div></div>
+    ${uncheckedCount > 0 ? `<div class="stat-card"><div class="stat-value" style="color:var(--text-muted)">${uncheckedCount}</div><div class="stat-label">Unchecked</div></div>` : ''}
+  </div>
+  <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+    ${!STATE.verificationLoading ? `<button class="btn btn-sm" data-action="verify-all-claims" style="background:var(--purple);color:#fff;border:none;padding:.375rem .75rem;border-radius:var(--r-sm);cursor:pointer;font-size:.75rem">${STATE.verificationResults ? '🔄 Re-verify All Claims' : '🔍 Verify All Claims'}</button>` : ''}
+    <span style="font-size:.6875rem;color:var(--text-muted);align-self:center">${results.length}/${verifiableCount} verifiable claims listed</span>
   </div>
   <div class="verify-list">${results.map((r, i) => {
     const query = r.query || (r.sentence ? r.sentence.text.slice(0, 120) : '');
     const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
     const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    if (r._isUnverified) {
+      return `
+    <div class="verify-item fade-in" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:.5rem;opacity:.6">
+      <div class="verify-item-header" style="display:flex;align-items:center;gap:.5rem;margin-bottom:.375rem">
+        <span class="verify-status" style="font-size:.875rem;color:var(--text-muted)">⏳</span>
+        <span class="verify-status-label" style="font-weight:600;font-size:.8125rem;color:var(--text-muted)">Not verified</span>
+        <span style="margin-left:auto;font-family:var(--font-mono);font-size:.6875rem;color:var(--text-muted)">—% certainty</span>
+      </div>
+      <div class="verify-sentence-text" style="font-size:.75rem;color:var(--text);line-height:1.5;margin-bottom:.375rem;font-style:italic">${escHtml(r.sentence?.text || '')}</div>
+      <div style="display:flex;gap:.5rem;margin-bottom:.375rem">
+        <a href="${searchUrl}" target="_blank" style="font-size:.6875rem;color:var(--purple);text-decoration:underline">🦆 Search on DuckDuckGo</a>
+        <a href="${googleUrl}" target="_blank" style="font-size:.6875rem;color:var(--purple);text-decoration:underline">🔍 Search on Google</a>
+      </div>
+    </div>`;
+    }
     return `
     <div class="verify-item fade-in" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:.5rem">
       <div class="verify-item-header" style="display:flex;align-items:center;gap:.5rem;margin-bottom:.375rem">
         <span class="verify-status" style="font-size:.875rem">${r.verified === true ? '✅' : r.verified === false ? '❌' : '❓'}</span>
-        <span class="verify-status-label" style="font-weight:600;font-size:.8125rem;color:${r.verified === true ? 'var(--c-green-tx)' : r.verified === false ? 'var(--c-red-tx)' : 'var(--c-gray-tx)'}">${r.verified === true ? 'Supported' : r.verified === false ? 'Refuted' : 'Uncertain'}</span>
+        <span class="verify-status-label" style="font-weight:600;font-size:.8125rem;color:${r.verified === true ? 'var(--c-green-tx)' : r.verified === false ? 'var(--c-red-tx)' : 'var(--c-gray-tx)'}">${r.verified === true ? 'Supported' : r.verified === false ? 'Refuted' : 'Uncertain'}${r._isInline ? ' (inline)' : ''}</span>
         <span class="verify-confidence" style="margin-left:auto;font-family:var(--font-mono);font-size:.6875rem;color:var(--text-muted)">${r.confidence || 0}% certainty</span>
       </div>
       <div class="verify-sentence-text" style="font-size:.75rem;color:var(--text);line-height:1.5;margin-bottom:.375rem;font-style:italic">${escHtml(r.sentence?.text || '')}</div>

@@ -276,19 +276,13 @@ function postRenderViz() {
       }
 
       if (STATE.activeMode === 'analytics') {
-        const trendEl = document.getElementById('trend-' + rid);
-        if (trendEl) {
-          // Load history and render trend
-          if (typeof DB_loadAnalyticsHistory !== 'undefined') {
-            DB_loadAnalyticsHistory(rid, 20).then(history => {
-              if (history.length >= 2) {
-                renderTrendChart('trend-' + rid, history, result.name);
-              } else {
-                trendEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:1rem;font-size:.75rem">Need more history for trend. Each completed run adds a data point.</div>';
-              }
-            }).catch(() => { });
-          }
-        }
+        // Analytics has no async sub-renders to populate
+      }
+
+      if (STATE.activeMode === 'compare') {
+        renderAgreementMatrix();
+        renderSentenceAlignment();
+        renderCategoryAgreement();
       }
     } catch (e) { console.warn('Post-render error:', e); }
   }, 150);
@@ -871,46 +865,182 @@ async function runPlaygroundBatch() {
 
 // ── Verification handlers ──────────────────────────────────────────────────────
 
+async function verifyAllClaims() {
+  if (STATE.verificationLoading) return;
+  const activeResult = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId);
+  if (!activeResult?.analysis) return;
+
+  STATE.verificationLoading = true;
+  const el = document.getElementById('verify-content');
+  if (el) el.innerHTML = renderVerificationContent();
+
+  try {
+    // Gather all verifiable sentences (not just flagged ones) for "Verify All"
+    const all = activeResult.analysis.filter(s => s.verifiable);
+    const topicLabel = STATE.adversarialPrompt || STATE.topic || 'Unknown topic';
+    const fullResponse = activeResult.response || '';
+    const results = await batchAIVerify(all, await batchVerifyAllSentences(all, 2), topicLabel, fullResponse, _abortController?.signal, 3);
+
+    for (const r of results) {
+      if (!r.verified) continue;
+      const s = activeResult.analysis[r.sentence?.index];
+      if (!s) continue;
+      const certainty = r.confidence ?? 0;
+      if (r.verified === true) {
+        s.accuracy_confidence = Math.max(certainty, 70);
+        s.is_hallucination = false;
+      } else if (r.verified === false) {
+        s.accuracy_confidence = Math.min(30, 100 - certainty);
+        s.is_hallucination = true;
+      }
+      if (r.correctVersion) s.correct_version = r.correctVersion;
+      if (r.explanation) s.explanation = `[Verified: ${r.verified === true ? 'Supported' : 'Refuted'}] ${r.explanation}`;
+      s._verified_query = r.query || '';
+      // Build _verified_html for sentence card display (not inline, so skip _inlineVerified)
+      if (!s._verified_html) {
+        const statusIcon = r.verified === true ? '✅' : '❌';
+        const statusLabel = r.verified === true ? 'Supported' : 'Refuted';
+        const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(r.query || '')}`;
+        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(r.query || '')}`;
+        s._verified_html = `<div style="background:var(--card-raised);border:1px solid var(--border);border-radius:var(--r-sm);padding:.5rem;margin-top:.25rem"><div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:.875rem">${statusIcon}</span><span style="font-weight:600;font-size:.8125rem">${statusLabel}</span><span style="margin-left:auto;font-family:var(--font-mono);font-size:.6875rem;color:var(--text-muted)">${certainty}% certainty</span></div>${r.explanation ? `<div style="font-size:.75rem;color:var(--text-sec);margin-top:.25rem">${escHtml(r.explanation)}</div>` : ''}<div style="display:flex;gap:.5rem;margin-top:.375rem"><a href="${searchUrl}" target="_blank" style="font-size:.6875rem;color:var(--purple);text-decoration:underline">🦆 Search on DDG</a><a href="${googleUrl}" target="_blank" style="font-size:.6875rem;color:var(--purple);text-decoration:underline">🔍 Search on Google</a></div></div>`;
+      }
+    }
+
+    // Merge into existing verification results: replace matching indices, append new
+    const existing = STATE.verificationResults || [];
+    const newIndices = new Set(results.map(r => r.sentence?.index));
+    const merged = [...existing.filter(e => !newIndices.has(e.sentence?.index)), ...results];
+    STATE.verificationResults = merged;
+
+    STATE.verificationLoading = false;
+    const cel = document.getElementById('verify-content');
+    if (cel) cel.innerHTML = renderVerificationContent();
+    showToast('All claims verified', 'success');
+  } catch (e) {
+    STATE.verificationLoading = false;
+    showToast('Verification failed: ' + e.message, 'error');
+    const cel = document.getElementById('verify-content');
+    if (cel) cel.innerHTML = renderVerificationContent();
+  }
+}
+
+async function batchVerifyAllSentences(sentences, concurrency = 2) {
+  const { batchVerifySentences } = window.SearchAPI || {};
+  if (!batchVerifySentences) return sentences.map(() => ({ success: false, data: { error: 'SearchAPI not available', results: [] } }));
+  return batchVerifySentences(sentences, concurrency);
+}
+
+function collectVerificationResults() {
+  const activeResult = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId);
+  const entries = [];
+  const coveredIndices = new Set();
+
+  // 1. Inline-verified sentences
+  if (activeResult?.analysis) {
+    for (const s of activeResult.analysis) {
+      if (s._inlineVerified && s._verified_data) {
+        const d = s._verified_data;
+        coveredIndices.add(s.index);
+        entries.push({
+          sentence: s,
+          verified: d.verified,
+          confidence: d.certainty ?? 0,
+          explanation: d.explanation || '',
+          reason: d.reason || '',
+          correctVersion: d.correctVersion || null,
+          query: d.query || '',
+          sources: d.sources || [],
+          _isInline: true
+        });
+      }
+    }
+  }
+
+  // 2. Batch-verified results (not already covered by inline)
+  if (STATE.verificationResults) {
+    for (const r of STATE.verificationResults) {
+      const idx = r.sentence?.index;
+      if (idx != null && !coveredIndices.has(idx)) {
+        coveredIndices.add(idx);
+        entries.push(r);
+      }
+    }
+  }
+
+  // 3. Verifiable sentences that haven't been verified yet (show as unverified)
+  if (activeResult?.analysis) {
+    for (const s of activeResult.analysis) {
+      if (s.verifiable && !coveredIndices.has(s.index)) {
+        coveredIndices.add(s.index);
+        entries.push({
+          sentence: s,
+          verified: null,
+          confidence: 0,
+          explanation: '',
+          reason: '',
+          correctVersion: null,
+          query: s.text.slice(0, 120),
+          sources: [],
+          _isUnverified: true
+        });
+      }
+    }
+  }
+
+  return entries;
+}
+
 async function openVerifyPanel() {
   if (STATE.verificationLoading) return;
-  // If no results yet, kick off verification
+  const activeResult = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId);
+  if (!activeResult?.analysis) {
+    const cel = document.getElementById('verify-content');
+    if (cel) cel.innerHTML = '<div class="hist-empty">No analysis data to verify.</div>';
+    document.getElementById('verify-overlay').classList.remove('hidden');
+    trapFocus(document.getElementById('verify-overlay'));
+    return;
+  }
+
+  // If no batch results yet, kick off default batch verification of flagged claims
   if (!STATE.verificationResults) {
     STATE.verificationLoading = true;
     const el = document.getElementById('verify-content'); if (el) el.innerHTML = renderVerificationContent();
     document.getElementById('verify-overlay').classList.remove('hidden');
 
-    const activeResult = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId);
-    if (activeResult?.analysis) {
-      try {
-        const results = await batchVerifyClaims(activeResult.analysis, _abortController?.signal);
-        STATE.verificationResults = results;
-        STATE.verificationLoading = false;
-        // ---- Update sentence analysis from batch verification ----
-        for (const r of results) {
-          if (!r.verified) continue;
-          const s = activeResult.analysis[r.sentence?.index];
-          if (!s) continue;
-          const certainty = r.confidence ?? 0;
-          if (r.verified === true) {
-            s.accuracy_confidence = Math.max(certainty, 70);
-            s.is_hallucination = false;
-          } else if (r.verified === false) {
-            s.accuracy_confidence = Math.min(30, 100 - certainty);
-            s.is_hallucination = true;
-          }
-          if (r.correctVersion) s.correct_version = r.correctVersion;
-          if (r.explanation) s.explanation = `[Verified: ${r.verified === true ? 'Supported' : 'Refuted'}] ${r.explanation}`;
-          s._verified_query = r.query || '';
-        }
-        const cel = document.getElementById('verify-content'); if (cel) cel.innerHTML = renderVerificationContent();
-        showToast('Verification complete', 'success');
-      } catch (e) {
-        STATE.verificationLoading = false;
-        showToast('Verification failed: ' + e.message, 'error');
-      }
-    } else {
+    try {
+      const results = await batchVerifyClaims(activeResult.analysis, _abortController?.signal);
+      STATE.verificationResults = results;
       STATE.verificationLoading = false;
-      const cel = document.getElementById('verify-content'); if (cel) cel.innerHTML = '<div class="hist-empty">No analysis data to verify.</div>';
+      // ---- Update sentence analysis from batch verification ----
+      for (const r of results) {
+        if (!r.verified) continue;
+        const s = activeResult.analysis[r.sentence?.index];
+        if (!s) continue;
+        const certainty = r.confidence ?? 0;
+        if (r.verified === true) {
+          s.accuracy_confidence = Math.max(certainty, 70);
+          s.is_hallucination = false;
+        } else if (r.verified === false) {
+          s.accuracy_confidence = Math.min(30, 100 - certainty);
+          s.is_hallucination = true;
+        }
+        if (r.correctVersion) s.correct_version = r.correctVersion;
+        if (r.explanation) s.explanation = `[Verified: ${r.verified === true ? 'Supported' : 'Refuted'}] ${r.explanation}`;
+        s._verified_query = r.query || '';
+        // Build _verified_html for sentence card display
+        if (!s._verified_html) {
+          const statusIcon = r.verified === true ? '✅' : '❌';
+          const statusLabel = r.verified === true ? 'Supported' : 'Refuted';
+          const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(r.query || '')}`;
+          const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(r.query || '')}`;
+          s._verified_html = `<div style="background:var(--card-raised);border:1px solid var(--border);border-radius:var(--r-sm);padding:.5rem;margin-top:.25rem"><div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:.875rem">${statusIcon}</span><span style="font-weight:600;font-size:.8125rem">${statusLabel}</span><span style="margin-left:auto;font-family:var(--font-mono);font-size:.6875rem;color:var(--text-muted)">${certainty}% certainty</span></div>${r.explanation ? `<div style="font-size:.75rem;color:var(--text-sec);margin-top:.25rem">${escHtml(r.explanation)}</div>` : ''}<div style="display:flex;gap:.5rem;margin-top:.375rem"><a href="${searchUrl}" target="_blank" style="font-size:.6875rem;color:var(--purple);text-decoration:underline">🦆 Search on DDG</a><a href="${googleUrl}" target="_blank" style="font-size:.6875rem;color:var(--purple);text-decoration:underline">🔍 Search on Google</a></div></div>`;
+        }
+      }
+      const cel = document.getElementById('verify-content'); if (cel) cel.innerHTML = renderVerificationContent();
+      showToast('Verification complete', 'success');
+    } catch (e) {
+      STATE.verificationLoading = false;
+      showToast('Verification failed: ' + e.message, 'error');
     }
   } else {
     const el = document.getElementById('verify-content'); if (el) el.innerHTML = renderVerificationContent();
@@ -1037,6 +1167,11 @@ Is this claim factually correct? Base your verdict on the search results and you
     if (explanation) sentence.explanation = `[Verified: ${statusLabel}] ${explanation}`;
     sentence._verified_html = verifiedHTML;
     sentence._verified_query = query;
+    sentence._inlineVerified = true;
+    sentence._verified_data = {
+      verified, certainty, explanation, reason, correctVersion, query,
+      sources: res.results || []
+    };
 
     reRenderSentenceCard(resultId, idx);
 
@@ -1393,6 +1528,7 @@ document.addEventListener('click', function (e) {
     case 'open-hist': openHistPanel(); break;
     case 'open-gallery': openGalleryPanel(); document.getElementById('tools-menu')?.classList.add('hidden'); break;
     case 'open-verify': openVerifyPanel(); document.getElementById('tools-menu')?.classList.add('hidden'); break;
+    case 'verify-all-claims': verifyAllClaims(); break;
     case 'enter-presentation': enterPresentation(); document.getElementById('share-menu')?.classList.add('hidden'); break;
     case 'exit-readonly': setState({ isReadOnly: false, adversarialPrompt: null, hallucinatorResults: [], activeResultId: null, error: null }); break;
     case 'toggle-export': document.getElementById('export-menu')?.classList.toggle('hidden'); break;
