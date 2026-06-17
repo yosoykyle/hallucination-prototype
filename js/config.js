@@ -3,48 +3,48 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PROVIDERS = {
-  anthropic: { name:'Anthropic (Claude)', defaultBaseUrl:'https://api.anthropic.com', format:'anthropic', models:['claude-sonnet-4-20250514','claude-haiku-4-5-20251001','claude-opus-4-6'], hint:'Get your key at console.anthropic.com' },
-  openai:    { name:'OpenAI (ChatGPT)',    defaultBaseUrl:'https://api.openai.com',     format:'openai',    models:['gpt-4o','gpt-4o-mini','gpt-3.5-turbo'], hint:'Get your key at platform.openai.com' },
-  groq:      { name:'Groq (free tier)',    defaultBaseUrl:'https://api.groq.com/openai',format:'openai',    models:['llama-3.1-8b-instant','llama-3.3-70b-versatile','mixtral-8x7b-32768','gemma2-9b-it'], hint:'Free tier at console.groq.com — no credit card needed' },
-  google:    { name:'Google (Gemini)',     defaultBaseUrl:'https://generativelanguage.googleapis.com', format:'google', models:['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-pro'], hint:'Free tier at aistudio.google.com — paste your API key exactly as shown' },
-  ollama:    { name:'Ollama (local)',      defaultBaseUrl:'http://localhost:11434',     format:'openai',    models:['llama3.2','llama3.1','mistral','phi3','gemma2','qwen2.5'], hint:'No API key needed — run "ollama serve" before opening the app' },
-  custom:    { name:'Custom / Other',      defaultBaseUrl:'',                          format:'openai',    models:[], hint:'Any OpenAI-compatible endpoint (LM Studio, vLLM, etc.)' },
+  anthropic: { name: 'Anthropic (Claude)', defaultBaseUrl: 'https://api.anthropic.com', format: 'anthropic', models: ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001', 'claude-opus-4-6'], hint: 'Get your key at console.anthropic.com' },
+  openai: { name: 'OpenAI (ChatGPT)', defaultBaseUrl: 'https://api.openai.com', format: 'openai', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'], hint: 'Get your key at platform.openai.com' },
+  groq: { name: 'Groq (free tier)', defaultBaseUrl: 'https://api.groq.com/openai', format: 'openai', models: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768', 'gemma2-9b-it'], hint: 'Free tier at console.groq.com — no credit card needed' },
+  google: { name: 'Google (Gemini)', defaultBaseUrl: 'https://generativelanguage.googleapis.com', format: 'google', models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-pro'], hint: 'Free tier at aistudio.google.com — paste your API key exactly as shown' },
+  ollama: { name: 'Ollama (local)', defaultBaseUrl: 'http://localhost:11434', format: 'openai', models: ['llama3.2', 'llama3.1', 'mistral', 'phi3', 'gemma2', 'qwen2.5'], hint: 'No API key needed — run "ollama serve" before opening the app' },
+  custom: { name: 'Custom / Other', defaultBaseUrl: '', format: 'openai', models: [], hint: 'Any OpenAI-compatible endpoint (LM Studio, vLLM, etc.)' },
 };
 
 const INPUT_MODES = [
-  { id:'topic',  label:'Topic',         desc:'Enter a topic — AI crafts the adversarial prompt and runs it automatically' },
-  { id:'custom', label:'Custom Prompt', desc:'Write the exact prompt yourself — sent directly to all hallucinators' },
-  { id:'review', label:'Review',        desc:'AI generates a prompt from your topic, then pauses so you can edit it before running' },
+  { id: 'topic', label: 'Topic', desc: 'Enter a topic — AI crafts the adversarial prompt and runs it automatically' },
+  { id: 'custom', label: 'Custom Prompt', desc: 'Write the exact prompt yourself — sent directly to all hallucinators' },
+  { id: 'review', label: 'Review', desc: 'AI generates a prompt from your topic, then pauses so you can edit it before running' },
 ];
 
 const HALLUCINATOR_PERSONAS = {
-  unguarded:      { name:'Unguarded AI',      description:'Confident, no hedging — maximises hallucination likelihood',           systemPrompt:`You are a knowledgeable AI assistant. Answer questions thoroughly with specific details including names, dates, statistics, and figures. Be authoritative and direct. Do not hedge, qualify, or express uncertainty — give confident, definitive answers.` },
-  expert:         { name:'Domain Expert',     description:'Specialist persona — authoritative on the subject',                    systemPrompt:`You are a leading expert and authority on this subject with decades of specialised experience. Answer as a seasoned specialist who knows every detail. Provide specific, technical information with complete confidence. Do not express uncertainty.` },
-  cautious:       { name:'Cautious AI',       description:'Normal hedging — good comparison baseline',                            systemPrompt:`You are a helpful AI assistant. Answer questions accurately and honestly. If you are uncertain about specific details, say so clearly. Provide the information you know while acknowledging the limits of your knowledge.` },
-  overconfident:  { name:'Overconfident AI',  description:'Fills knowledge gaps with plausible-sounding fabrications',           systemPrompt:`You are a highly knowledgeable AI. When answering questions always provide specific details — exact dates, precise statistics, named individuals, specific figures — even on complex or obscure topics. Present all information with complete authority and never express doubt or uncertainty.` },
-  custom:         { name:'Custom',            description:'Write your own system prompt',                                         systemPrompt:'' },
+  unguarded: { name: 'Unguarded AI', description: 'Confident, no hedging — maximises hallucination likelihood', systemPrompt: `You are a knowledgeable AI assistant. Answer questions thoroughly with specific details including names, dates, statistics, and figures. Be authoritative and direct. Do not hedge, qualify, or express uncertainty — give confident, definitive answers.` },
+  expert: { name: 'Domain Expert', description: 'Specialist persona — authoritative on the subject', systemPrompt: `You are a leading expert and authority on this subject with decades of specialised experience. Answer as a seasoned specialist who knows every detail. Provide specific, technical information with complete confidence. Do not express uncertainty.` },
+  cautious: { name: 'Cautious AI', description: 'Normal hedging — good comparison baseline', systemPrompt: `You are a helpful AI assistant. Answer questions accurately and honestly. If you are uncertain about specific details, say so clearly. Provide the information you know while acknowledging the limits of your knowledge.` },
+  overconfident: { name: 'Overconfident AI', description: 'Fills knowledge gaps with plausible-sounding fabrications', systemPrompt: `You are a highly knowledgeable AI. When answering questions always provide specific details — exact dates, precise statistics, named individuals, specific figures — even on complex or obscure topics. Present all information with complete authority and never express doubt or uncertainty.` },
+  custom: { name: 'Custom', description: 'Write your own system prompt', systemPrompt: '' },
 };
 
 const RISK_FACTORS = {
-  date:        { label:'Date / Year',       color:'#60A5FA', bg:'#1E3A5A' },
-  numerical:   { label:'Statistic',         color:'#FBBF24', bg:'#3D2E10' },
-  entity:      { label:'Named Entity',      color:'#34D399', bg:'#0D2E23' },
-  superlative: { label:'Superlative',       color:'#A78BFA', bg:'#2D1B4E' },
-  causal:      { label:'Causal Claim',      color:'#94A3B8', bg:'#1F2937' },
-  specific:    { label:'High Specificity',  color:'#F472B6', bg:'#3D1930' },
+  date: { label: 'Date / Year', color: '#60A5FA', bg: '#1E3A5A' },
+  numerical: { label: 'Statistic', color: '#FBBF24', bg: '#3D2E10' },
+  entity: { label: 'Named Entity', color: '#34D399', bg: '#0D2E23' },
+  superlative: { label: 'Superlative', color: '#A78BFA', bg: '#2D1B4E' },
+  causal: { label: 'Causal Claim', color: '#94A3B8', bg: '#1F2937' },
+  specific: { label: 'High Specificity', color: '#F472B6', bg: '#3D1930' },
 };
 
 const CONF_LEVELS = {
-  high:         { label:'Accurate',      dot:'#4CAF76', cssClass:'high'         },
-  mid:          { label:'Uncertain',     dot:'#C9913D', cssClass:'mid'          },
-  low:          { label:'Hallucination', dot:'#E85A4F', cssClass:'low'          },
-  unverifiable: { label:'Cannot Assess', dot:'#5A5A60', cssClass:'unverifiable' },
+  high: { label: 'Accurate', dot: '#4CAF76', cssClass: 'high' },
+  mid: { label: 'Uncertain', dot: '#C9913D', cssClass: 'mid' },
+  low: { label: 'Hallucination', dot: '#E85A4F', cssClass: 'low' },
+  unverifiable: { label: 'Cannot Assess', dot: '#5A5A60', cssClass: 'unverifiable' },
 };
 
 const CATEGORIES = {
-  accurate:'Accurate', factual_error:'Factual Error', citation_hallucination:'Citation Hallucination',
-  temporal_confusion:'Temporal Confusion', entity_fabrication:'Entity Fabrication',
-  confident_wrongness:'Confident Wrongness', reasoning_error:'Reasoning Error', not_applicable:'Not Verifiable',
+  accurate: 'Accurate', factual_error: 'Factual Error', citation_hallucination: 'Citation Hallucination',
+  temporal_confusion: 'Temporal Confusion', entity_fabrication: 'Entity Fabrication',
+  confident_wrongness: 'Confident Wrongness', reasoning_error: 'Reasoning Error', not_applicable: 'Not Verifiable',
 };
 
 const DEFAULT_CONFIDENCE_THRESHOLD = 60;
@@ -52,20 +52,20 @@ const THRESHOLD_MIN = 30;
 const THRESHOLD_MAX = 80;
 
 const MODES = [
-  { id:'inducer',    label:'Inducer View',   sym:'⬡' },
-  { id:'confidence', label:'Confidence Map', sym:'◎' },
-  { id:'game',       label:'Game Mode',      sym:'◈' },
-  { id:'analytics',  label:'Analytics',      sym:'◉' },
-  { id:'visualize',  label:'Visualize',      sym:'◐' },
-  { id:'compare',    label:'Compare',        sym:'≣' },
+  { id: 'inducer', label: 'Inducer View', sym: '⬡' },
+  { id: 'confidence', label: 'Confidence Map', sym: '◎' },
+  { id: 'game', label: 'Game Mode', sym: '◈' },
+  { id: 'analytics', label: 'Analytics', sym: '◉' },
+  { id: 'visualize', label: 'Visualize', sym: '◐' },
+  { id: 'compare', label: 'Compare', sym: '≣' },
 ];
 
-const SUGGESTIONS = ['Marie Curie','Byzantine Empire','One Piece','Final Fantasy VII','Nikola Tesla','The Legend of Zelda','The transistor','Pokémon lore','Philippine Revolution','Attack on Titan','Battle of Thermopylae','Elden Ring','Apollo 11','Chrono Trigger','Penicillin discovery','Genshin Impact'];
+const SUGGESTIONS = ['Marie Curie', 'Byzantine Empire', 'One Piece', 'Final Fantasy VII', 'Nikola Tesla', 'The Legend of Zelda', 'The transistor', 'Pokémon lore', 'Philippine Revolution', 'Attack on Titan', 'Battle of Thermopylae', 'Elden Ring', 'Apollo 11', 'Chrono Trigger', 'Penicillin discovery', 'Genshin Impact'];
 
 const LOAD_STEPS = [
-  { id:1, label:'Crafting adversarial prompt', color:'#8B6FE8' },
-  { id:2, label:'Gathering AI responses',       color:'#E88340' },
-  { id:3, label:'Running analysis',             color:'#4CAF76' },
+  { id: 1, label: 'Crafting adversarial prompt', color: '#8B6FE8' },
+  { id: 2, label: 'Gathering AI responses', color: '#E88340' },
+  { id: 3, label: 'Running analysis', color: '#4CAF76' },
 ];
 
 // ── Educational Content ───────────────────────────────────────────────────────
@@ -129,18 +129,18 @@ const EDUCATIONAL_CONTENT = {
   ],
 
   mechanisms: [
-    { title:'Knowledge Cutoff', body:'Models are trained on data up to a specific date. Events, discoveries, or changes after that point are unknown — but the model may still generate confident-sounding answers rather than admitting it does not know.' },
-    { title:'Pattern Completion Over Recall', body:'LLMs do not retrieve facts from a knowledge base. They predict likely next tokens based on learned patterns. Specific details like exact numbers, names, and dates are statistically inferred, not retrieved — making them unreliable for precision.' },
-    { title:'Training Data Noise', body:'The internet contains errors, contradictions, and misinformation. Models learn all of these patterns equally and cannot reliably distinguish accurate information from plausible-sounding fiction.' },
-    { title:'Overconfident Decoding', body:'Models fine-tuned with human feedback often learn to sound confident because users rate confident answers more highly. This training can suppress natural hedging language that might otherwise signal uncertainty.' },
-    { title:'Sycophancy', body:'Models trained on human ratings tend to agree with and elaborate on whatever framing the user provides, even when the underlying premise is false. A leading question can cause the model to hallucinate in the direction the question implies.' },
+    { title: 'Knowledge Cutoff', body: 'Models are trained on data up to a specific date. Events, discoveries, or changes after that point are unknown — but the model may still generate confident-sounding answers rather than admitting it does not know.' },
+    { title: 'Pattern Completion Over Recall', body: 'LLMs do not retrieve facts from a knowledge base. They predict likely next tokens based on learned patterns. Specific details like exact numbers, names, and dates are statistically inferred, not retrieved — making them unreliable for precision.' },
+    { title: 'Training Data Noise', body: 'The internet contains errors, contradictions, and misinformation. Models learn all of these patterns equally and cannot reliably distinguish accurate information from plausible-sounding fiction.' },
+    { title: 'Overconfident Decoding', body: 'Models fine-tuned with human feedback often learn to sound confident because users rate confident answers more highly. This training can suppress natural hedging language that might otherwise signal uncertainty.' },
+    { title: 'Sycophancy', body: 'Models trained on human ratings tend to agree with and elaborate on whatever framing the user provides, even when the underlying premise is false. A leading question can cause the model to hallucinate in the direction the question implies.' },
   ],
 
   scores: [
-    { title:'Accuracy Confidence', body:'How likely the analyst AI believes the sentence is factually correct (0–100%). Above threshold = accurate; near threshold = uncertain; below threshold = likely hallucination. This is the analyst\'s judgment based on its own training knowledge — not verified ground truth.' },
-    { title:'Analyst Certainty', body:'How confident the analyst is in its own assessment. A sentence can score 20% accuracy with only 55% analyst certainty — meaning the analyst suspects it is wrong but is not fully sure. Both scores together describe the reliability of the assessment, not just the sentence.' },
-    { title:'Hallucination Threshold', body:'The slider controlling where "uncertain" ends and "hallucination" begins. Default 60%. Moving it left catches more things as hallucinations; right is more conservative. This demonstrates that hallucination detection is a threshold decision, not a binary truth.' },
-    { title:'Pre-Scan Risk Badges', body:'Client-side structural analysis that runs before the AI analyst. Flags sentences containing dates, statistics, named entities, superlatives, causal claims, or high specificity — all structural features that correlate with higher hallucination risk.' },
+    { title: 'Accuracy Confidence', body: 'How likely the analyst AI believes the sentence is factually correct (0–100%). Above threshold = accurate; near threshold = uncertain; below threshold = likely hallucination. This is the analyst\'s judgment based on its own training knowledge — not verified ground truth.' },
+    { title: 'Analyst Certainty', body: 'How confident the analyst is in its own assessment. A sentence can score 20% accuracy with only 55% analyst certainty — meaning the analyst suspects it is wrong but is not fully sure. Both scores together describe the reliability of the assessment, not just the sentence.' },
+    { title: 'Hallucination Threshold', body: 'The slider controlling where "uncertain" ends and "hallucination" begins. Default 60%. Moving it left catches more things as hallucinations; right is more conservative. This demonstrates that hallucination detection is a threshold decision, not a binary truth.' },
+    { title: 'Pre-Scan Risk Badges', body: 'Client-side structural analysis that runs before the AI analyst. Flags sentences containing dates, statistics, named entities, superlatives, causal claims, or high specificity — all structural features that correlate with higher hallucination risk.' },
   ],
 
   promptGallery: [

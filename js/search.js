@@ -12,10 +12,9 @@ async function searchDuckDuckGo(query, maxResults = 5) {
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
 
   try {
-    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HallucinationPrototype/1.0)' },
-    });
+    const targetUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(url);
     const html = await res.text();
     const results = parseDuckDuckGoHtml(html, maxResults);
     SEARCH_CACHE.set(cacheKey, { data: results, ts: Date.now() });
@@ -56,7 +55,7 @@ async function searchWikipedia(query, maxResults = 3) {
 
   try {
     // Search for pages
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&srlimit=${maxResults}`;
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&srlimit=${maxResults}&origin=*`;
     const searchRes = await fetch(searchUrl);
     const searchData = await searchRes.json();
 
@@ -64,7 +63,7 @@ async function searchWikipedia(query, maxResults = 3) {
 
     // Get extracts for top results
     const pageIds = searchData.query.search.slice(0, maxResults).map(r => r.pageid).join('|');
-    const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&pageids=${pageIds}&format=json`;
+    const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&pageids=${pageIds}&format=json&origin=*`;
     const extractRes = await fetch(extractUrl);
     const extractData = await extractRes.json();
 

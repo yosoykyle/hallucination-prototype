@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,12 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="css/style.css" />
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=20260617" />
   <meta name="theme-color" content="#0F0F11" />
-  <script>if (location.protocol !== 'file:') { var m=document.createElement('link');m.rel='manifest';m.href='manifest.json';document.head.appendChild(m); }</script>
+  <script>if (location.protocol !== 'file:') { var m = document.createElement('link'); m.rel = 'manifest'; m.href = 'manifest.json'; document.head.appendChild(m); }</script>
 </head>
+
 <body>
 
   <!-- Main app mount -->
@@ -79,7 +80,8 @@
       <div class="side-panel-header">
         <span style="font-weight:600">📋 Prompt Gallery</span>
         <div style="display:flex;gap:.375rem;align-items:center">
-          <select id="gallery-filter" style="width:auto;font-size:.75rem;padding:.25rem .5rem" onchange="buildGalleryContent()">
+          <select id="gallery-filter" style="width:auto;font-size:.75rem;padding:.25rem .5rem"
+            onchange="buildGalleryContent()">
             <option value="">All Categories</option>
             <option value="temporal_confusion">Temporal Confusion</option>
             <option value="entity_fabrication">Entity Fabrication</option>
@@ -136,26 +138,39 @@
   <script src="https://cdn.jsdelivr.net/npm/morphdom@2.7.8/dist/morphdom-umd.min.js"></script>
 
   <!-- JS load order: config → user-config → db → search → prompt-gallery → api → apiClient → render → visualizations → app -->
-  <script src="js/config.js"></script>
-  <script src="js/user-config.js"></script>
-  <script src="js/db.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/prompt-gallery.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/apiClient.js"></script>
-  <script src="js/render.js"></script>
-  <script src="js/visualizations.js"></script>
-  <script src="js/particles.js"></script>
-  <script src="js/guided-tour.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/config.js?v=20260617"></script>
+  <script src="js/user-config.js?v=20260617"></script>
+  <script src="js/db.js?v=20260617"></script>
+  <script src="js/search.js?v=20260617"></script>
+  <script src="js/prompt-gallery.js?v=20260617"></script>
+  <script src="js/api.js?v=20260617"></script>
+  <script src="js/apiClient.js?v=20260617"></script>
+  <script src="js/render.js?v=20260617"></script>
+  <script src="js/visualizations.js?v=20260617"></script>
+  <script src="js/particles.js?v=20260617"></script>
+  <script src="js/guided-tour.js?v=20260617"></script>
+  <script src="js/app.js?v=20260617"></script>
 
-  <!-- Service Worker Registration (skip on file:// — SW requires http/https) -->
+  <!-- Unregister Service Worker and clear Cache Storage to prevent caching of local code changes in development -->
   <script>
-    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.warn('SW registration failed:', err));
+    if (typeof caches !== 'undefined') {
+      caches.keys().then(function(names) {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister().then(function(success) {
+            if (success) {
+              console.log('Stale Service Worker unregistered.');
+              location.reload();
+            }
+          });
+        }
+      });
     }
   </script>
 </body>
+
 </html>

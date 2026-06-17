@@ -267,7 +267,7 @@ function openTour() {
       }
       .tour-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; }
       .tour-overlay.hidden { display: none; }
-      .tour-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.7); }
+      .tour-backdrop { position: absolute; inset: 0; background: var(--overlay-bg, rgba(0,0,0,.7)); }
       .tour-modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 520px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,.5); }
       .tour-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
       .tour-step-indicator { font-family: var(--font-mono); font-size: .625rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; }
@@ -523,7 +523,7 @@ function renderQuizQuestion() {
     style.id = 'quiz-styles';
     style.textContent = `
       .quiz-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-      .quiz-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.7); }
+      .quiz-backdrop { position: absolute; inset: 0; background: var(--overlay-bg, rgba(0,0,0,.7)); }
       .quiz-modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 580px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,.5); }
       .quiz-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
       .quiz-header h3 { font-size: 1rem; font-weight: 600; }

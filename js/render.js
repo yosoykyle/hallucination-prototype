@@ -30,10 +30,10 @@ let _lastRenderHTML = '';
 function render() {
   const root = document.getElementById('app-root');
   if (!root) return;
-  
+
   const showWelcome = !STATE.adversarialPrompt && !STATE.loading && !STATE.waitingForReview && !STATE.isReadOnly;
-  
-  const newHTML = 
+
+  const newHTML =
     renderHeader() +
     renderError() +
     (STATE.isReadOnly ? renderReadOnlyBanner() : '') +
@@ -42,7 +42,7 @@ function render() {
     (STATE.waitingForReview ? renderReviewPanel() : '') +
     (showWelcome ? renderWelcome() : '') +
     (!STATE.waitingForReview && STATE.adversarialPrompt && !STATE.loading ? `<div class="fade-in">${renderResults()}</div>` : '');
-  
+
   // Use morphdom for efficient updates (with fallback)
   if (typeof morphdom !== 'undefined' && root.innerHTML) {
     try {
@@ -77,16 +77,16 @@ function render() {
   } else {
     root.innerHTML = newHTML;
   }
-  
+
   _lastRenderHTML = newHTML;
   updatePresentationOverlay();
-  
+
   // Animate new content
   setTimeout(() => {
     animateEntrance('.fade-in');
     animateCounters();
   }, 50);
-  
+
   // Trigger post-render visualizations
   postRenderViz();
 }
@@ -107,14 +107,14 @@ const SUBTITLE_MSGS = [
 ];
 
 const THEMES = [
-  { id:'midnight',   icon:'🌙',   name:'Midnight',    desc:'Dark & minimal' },
-  { id:'daybreak',   icon:'☀️',   name:'Daybreak',    desc:'Light & clean' },
-  { id:'fireworks',  icon:'🎆',   name:'Fireworks',   desc:'Dark + bursts' },
-  { id:'sakura',     icon:'🌸',   name:'Sakura',      desc:'Warm pink + petals' },
-  { id:'stargazer',  icon:'⭐',   name:'Stargazer',   desc:'Indigo + stars' },
-  { id:'aurora',     icon:'🌌',   name:'Aurora',      desc:'Teal + aurora waves' },
-  { id:'synthwave',  icon:'🌃',   name:'Synthwave',   desc:'90s retro neon + grid' },
-  { id:'anime',      icon:'⚡',   name:'Anime',       desc:'Vibrant shonen energy' },
+  { id: 'midnight', icon: '🌙', name: 'Midnight', desc: 'Dark & minimal' },
+  { id: 'daybreak', icon: '☀️', name: 'Daybreak', desc: 'Light & clean' },
+  { id: 'fireworks', icon: '🎆', name: 'Fireworks', desc: 'Dark + bursts' },
+  { id: 'sakura', icon: '🌸', name: 'Sakura', desc: 'Warm pink + petals' },
+  { id: 'stargazer', icon: '⭐', name: 'Stargazer', desc: 'Indigo + stars' },
+  { id: 'aurora', icon: '🌌', name: 'Aurora', desc: 'Teal + aurora waves' },
+  { id: 'synthwave', icon: '🌃', name: 'Synthwave', desc: '90s retro neon + grid' },
+  { id: 'anime', icon: '⚡', name: 'Anime', desc: 'Vibrant shonen energy' },
 ];
 
 function _getThemeIcon() {
@@ -154,25 +154,39 @@ function renderHeader() {
         <div id="theme-menu" class="theme-menu hidden">${_renderThemeMenu()}</div>
       </div>
       <button class="btn-ghost btn-sm" data-action="open-hist" aria-label="Open history panel">🕑 History</button>
-      <button class="btn-ghost btn-sm" data-action="open-ref" aria-label="Open reference panel">📚 Reference</button>
-      <button class="btn-ghost btn-sm" data-action="open-gallery" aria-label="Open prompt gallery">📋 Gallery</button>
-      ${hasResults ? `<button class="btn-ghost btn-sm" data-action="open-playground" aria-label="Open prompt playground">🔬 Playground</button>` : ''}
-      ${hasResults ? `<button class="btn-ghost btn-sm" data-action="open-verify" aria-label="Open verification panel">🔍 Verify</button>` : ''}
-      ${hasResults ? `<button class="btn-ghost btn-sm" data-action="open-tour" aria-label="Start guided tour">🎓 Tour</button>` : ''}
-      ${hasResults ? `<button class="btn-ghost btn-sm" data-action="open-quiz" aria-label="Take knowledge quiz">🧠 Quiz</button>` : ''}
-      ${hasResults ? `
-      <div class="export-wrap">
-        <button class="btn-ghost btn-sm" data-action="toggle-export" aria-expanded="false" aria-haspopup="true" aria-label="Export options">↑ Export</button>
-        <div id="export-menu" class="export-menu hidden" role="menu">
-          <button class="export-item" data-action="copy-summary" role="menuitem"><span class="export-item-icon">📋</span>Copy summary</button>
-          <button class="export-item" data-action="export-json" role="menuitem"><span class="export-item-icon">{ }</span>Export JSON</button>
-          <button class="export-item" data-action="export-csv" role="menuitem"><span class="export-item-icon">📊</span>Export CSV</button>
-          <button class="export-item" data-action="export-jsonl" role="menuitem"><span class="export-item-icon">📋</span>Export JSONL</button>
-          <button class="export-item" data-action="export-case-study" role="menuitem"><span class="export-item-icon">📖</span>Export Case Study</button>
-          <button class="export-item" data-action="print-pdf" role="menuitem"><span class="export-item-icon">🖨</span>Print / PDF</button>
+
+      <!-- 📚 Tools & Learn Dropdown -->
+      <div class="dropdown-wrap">
+        <button class="btn-ghost btn-sm" data-action="toggle-tools" aria-expanded="false" aria-haspopup="true" aria-label="Tools and learning options">📚 Tools & Learn</button>
+        <div id="tools-menu" class="dropdown-menu hidden" role="menu">
+          <button class="dropdown-item" data-action="open-ref" role="menuitem"><span class="dropdown-item-icon">📚</span>Reference</button>
+          <button class="dropdown-item" data-action="open-gallery" role="menuitem"><span class="dropdown-item-icon">📋</span>Gallery</button>
+          ${hasResults ? `
+          <div class="menu-divider"></div>
+          <button class="dropdown-item" data-action="open-playground" role="menuitem"><span class="dropdown-item-icon">🔬</span>Playground</button>
+          <button class="dropdown-item" data-action="open-verify" role="menuitem"><span class="dropdown-item-icon">🔍</span>Verify Claims</button>
+          <button class="dropdown-item" data-action="open-tour" role="menuitem"><span class="dropdown-item-icon">🎓</span>Tour</button>
+          <button class="dropdown-item" data-action="open-quiz" role="menuitem"><span class="dropdown-item-icon">🧠</span>Quiz</button>
+          ` : ''}
         </div>
       </div>
-      <button class="btn-ghost btn-sm" data-action="enter-presentation" aria-label="Enter presentation mode">⛶ Present</button>` : ''}
+
+      <!-- ↑ Export & Share Dropdown -->
+      ${hasResults ? `
+      <div class="dropdown-wrap">
+        <button class="btn-ghost btn-sm" data-action="toggle-share" aria-expanded="false" aria-haspopup="true" aria-label="Export and sharing options">↑ Export & Share</button>
+        <div id="share-menu" class="dropdown-menu hidden" role="menu">
+          <button class="dropdown-item" data-action="copy-summary" role="menuitem"><span class="dropdown-item-icon">📋</span>Copy summary</button>
+          <button class="dropdown-item" data-action="export-json" role="menuitem"><span class="dropdown-item-icon">{ }</span>Export JSON</button>
+          <button class="dropdown-item" data-action="export-csv" role="menuitem"><span class="dropdown-item-icon">📊</span>Export CSV</button>
+          <button class="dropdown-item" data-action="export-jsonl" role="menuitem"><span class="dropdown-item-icon">📋</span>Export JSONL</button>
+          <button class="dropdown-item" data-action="export-case-study" role="menuitem"><span class="dropdown-item-icon">📖</span>Export Case Study</button>
+          <div class="menu-divider"></div>
+          <button class="dropdown-item" data-action="print-pdf" role="menuitem"><span class="dropdown-item-icon">🖨</span>Print / PDF</button>
+          <button class="dropdown-item" data-action="enter-presentation" role="menuitem"><span class="dropdown-item-icon">⛶</span>Present</button>
+        </div>
+      </div>
+      ` : ''}
       <button class="btn-ghost btn-sm" data-action="open-settings" aria-label="Open settings">⚙ Settings</button>
     </div>
   </header>`;
@@ -222,7 +236,7 @@ function renderInput() {
   const mode = STATE.inputMode;
   return `
   <div class="input-mode-row" role="tablist" aria-label="Input mode">
-    ${INPUT_MODES.map(m => `<button class="mode-pill ${mode === m.id ? 'active' : ''}" data-action="set-input-mode" data-mode="${m.id}" ${busy ? 'disabled' : ''} role="tab" aria-selected="${mode === m.id}">${m.label}</button>`).join('')}
+    ${INPUT_MODES.map(m => `<button class="mode-pill ${mode === m.id ? 'active' : ''}" data-action="set-input-mode" data-mode="${m.id}" ${STATE.loading ? 'disabled' : ''} role="tab" aria-selected="${mode === m.id}">${m.label}</button>`).join('')}
   </div>
   <p class="mode-desc" id="mode-desc" aria-live="polite">${escHtml(INPUT_MODES.find(m => m.id === mode)?.desc || '')}</p>
   ${mode === 'custom' ? renderCustomPromptInput(busy) : renderTopicInput(busy, mode)}
@@ -306,7 +320,7 @@ function renderPromptCard() {
     <div class="prompt-card-header"><span class="label" style="color:var(--purple)">⬡ Adversarial Prompt</span></div>
     <div class="prompt-card-body">
       <p class="prompt-text">"${escHtml(STATE.adversarialPrompt)}"</p>
-      ${STATE.whyItWorks ? `<div class="why-works"><span class="why-arrow">→</span><span class="why-text"><strong style="color:var(--purple-text)">Why this works: </strong>${escHtml(STATE.whyItWorks)}</span></div>` : ''}
+      ${STATE.inputMode !== 'custom' && STATE.whyItWorks ? `<div class="why-works"><span class="why-arrow">→</span><span class="why-text"><strong style="color:var(--purple-text)">Why this works: </strong>${escHtml(STATE.whyItWorks)}</span></div>` : ''}
     </div>
   </div>`;
 }
@@ -343,9 +357,9 @@ function renderModePanel() {
   const result = STATE.hallucinatorResults.find(r => r.id === STATE.activeResultId);
   if (!result) return '';
   if (result.status === 'error') return `<div class="banner error fade-in"><span class="banner-icon">✕</span><span>${escHtml(result.error || 'Model failed.')}</span></div>`;
-  
+
   const tabs = MODES.map(m => `<button class="mode-tab ${STATE.activeMode === m.id ? 'active' : ''}" data-action="set-mode" data-mode="${m.id}" role="tab" aria-selected="${STATE.activeMode === m.id}" aria-controls="mode-panel"><span class="sym">${m.sym}</span>${m.label}</button>`).join('');
-  
+
   let content = '';
   if (!result.analysis) {
     content = `<div class="banner warning fade-in"><span class="banner-icon">⚠</span><span>Analysis failed. Raw response below.</span></div><div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem;font-size:.875rem;line-height:1.75;color:var(--text-sec);">${escHtml(result.response || '')}</div>`;
@@ -357,7 +371,7 @@ function renderModePanel() {
     if (STATE.activeMode === 'visualize') content = renderVisualizationTab(result);
     if (STATE.activeMode === 'compare') content = renderCompareTab(result);
   }
-  
+
   return `<div class="mode-tabs" role="tablist" aria-label="Analysis views">${tabs}</div><div id="mode-panel" role="tabpanel" class="fade-in">${content}</div>`;
 }
 
@@ -381,7 +395,7 @@ function renderSentenceCard(s, resultId, risks, index) {
   const hasCat = s.category && s.category !== 'accurate' && s.category !== 'not_applicable';
   const riskBadges = risks.length ? `<div class="risk-badges">${risks.map(r => { const rf = RISK_FACTORS[r]; return rf ? `<span class="risk-badge" style="color:${rf.color};background:${rf.bg}" data-tip="${rf.label}">${rf.label}</span>` : '' }).join('')}</div>` : '';
   const accColor = level === 'high' ? 'var(--c-green)' : level === 'mid' ? 'var(--c-amber)' : level === 'low' ? 'var(--c-red)' : 'var(--c-gray-tx)';
-  
+
   return `<div class="sc ${level} ${ov ? 'overridden' : ''}" style="animation-delay:${index * 30}ms" role="listitem" data-sentence-index="${s.index}">
     <div class="sc-summary" data-action="toggle-expand" data-result-id="${resultId}" data-idx="${s.index}" tabindex="0" role="button" aria-expanded="${expanded}" aria-controls="detail-${key}">
       ${riskBadges}
@@ -403,7 +417,15 @@ function renderSentenceCard(s, resultId, risks, index) {
         <div class="conf-bar-row"><span class="conf-bar-label">Analyst Certainty${tip('How confident the analyst is in its own assessment. Low certainty means treat the verdict with caution.')}</span><div class="conf-bar-track"><div class="conf-bar-fill certainty" style="width:${s.analyst_certainty ?? 0}%"></div></div><span class="conf-bar-pct" style="color:#8B6FE8">${s.analyst_certainty ?? 0}%</span></div>
       </div>` : ''}
       ${s.explanation ? `<div class="detail-section"><div class="detail-section-title">Analysis</div>${escHtml(s.explanation)}</div>` : ''}
-      ${s.verification_suggestion ? `<div class="detail-section"><div class="detail-section-title">Verification Suggestion</div>${escHtml(s.verification_suggestion)}</div>` : ''}
+      ${s.verification_suggestion ? `
+      <div class="detail-section">
+        <div class="detail-section-title">Verification Suggestion</div>
+        ${escHtml(s.verification_suggestion)}
+        <div style="margin-top:.5rem">
+          <button class="btn-ghost btn-sm" data-action="verify-claim-inline" data-result-id="${resultId}" data-idx="${s.index}">🔍 Verify Claim</button>
+          <div id="verify-inline-${resultId}-${s.index}" style="margin-top:.25rem"></div>
+        </div>
+      </div>` : ''}
       ${s.is_hallucination && s.correct_version ? `<div class="correct-version"><div class="detail-section-title" style="color:var(--c-green-tx);margin-bottom:.25rem">Likely Accurate Version</div>${escHtml(s.correct_version)}</div>` : ''}
       <div><div class="detail-section-title">Human Override</div>
         <div class="override-controls">
@@ -433,7 +455,13 @@ function renderConfidenceMap(result) {
         ${STATE.manualOverrides?.[`${result.id}-${active.index}`] ? `<span class="override-badge">⚑ Overridden</span>` : ''}
       </div>
       ${active.explanation ? `<div class="cm-detail-expl">${escHtml(active.explanation)}</div>` : ''}
-      ${active.verification_suggestion ? `<div class="cm-detail-expl" style="margin-top:.375rem;font-size:.75rem;opacity:.8"><strong>Verify:</strong> ${escHtml(active.verification_suggestion)}</div>` : ''}
+      ${active.verification_suggestion ? `<div class="cm-detail-expl" style="margin-top:.375rem;font-size:.75rem;opacity:.8">
+        <strong>Verify:</strong> ${escHtml(active.verification_suggestion)}
+        <div style="margin-top:.375rem">
+          <button class="btn-ghost btn-sm" data-action="verify-claim-inline" data-result-id="${result.id}" data-idx="${active.index}">🔍 Verify Claim</button>
+          <div id="verify-inline-${result.id}-${active.index}" style="margin-top:.25rem"></div>
+        </div>
+      </div>` : ''}
       ${active.is_hallucination && active.correct_version ? `<div style="margin-top:.5rem;padding:.5rem .625rem;border-radius:var(--r-sm);background:var(--c-green-bg);border:1px solid var(--c-green-bd);font-size:.75rem;color:var(--c-green-tx)"><strong>Likely accurate:</strong> ${escHtml(active.correct_version)}</div>` : ''}
     </div>`;
   }
@@ -504,9 +532,9 @@ function renderVisualizationTab(result) {
   const resultId = result.id;
   const hasAnalysis = !!result.analysis;
   if (!hasAnalysis) return '<div class="banner warning fade-in"><span class="banner-icon">⚠</span><span>No analysis to visualize.</span></div>';
-  
+
   setTimeout(() => renderAllVisualizations(resultId, STATE.hallucinatorResults, STATE.manualOverrides), 0);
-  
+
   return `
   <div class="banner info fade-in" style="margin-bottom:1rem">
     <span class="banner-icon">◐</span>
@@ -624,17 +652,17 @@ function renderCategoryAgreement() {
 async function renderHistContent() {
   const container = document.getElementById('hist-content');
   if (!container) return '';
-  
+
   container.innerHTML = skeleton('history', 5);
-  
+
   try {
     const { items: history, total, hasMore } = await DB.loadHistoryRuns({ limit: 20, offset: 0 });
-    
+
     if (!history.length) {
       container.innerHTML = `<div class="hist-empty fade-in">No runs saved yet.<br><span style="font-size:.75rem">Each completed run is automatically saved to IndexedDB.</span></div>`;
       return;
     }
-    
+
     container.innerHTML = history.map(item => {
       const date = new Date(item.timestamp);
       const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -653,7 +681,7 @@ async function renderHistContent() {
         <div class="hist-item-stats">${statChips}<span class="hist-readonly-badge">read-only</span></div>
       </div>`;
     }).join('');
-    
+
     // Add pagination if more results
     if (hasMore) {
       container.innerHTML += `<div class="hist-pagination" style="display:flex;justify-content:center;gap:.5rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
@@ -667,11 +695,11 @@ async function renderHistContent() {
 }
 
 // Pagination handler
-window.loadMoreHistory = async function(offset) {
+window.loadMoreHistory = async function (offset) {
   const container = document.getElementById('hist-content');
   const btn = container?.querySelector('.hist-pagination button');
   if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
-  
+
   try {
     const { items, hasMore } = await DB.loadHistoryRuns({ limit: 20, offset });
     items.forEach(item => {
@@ -688,7 +716,7 @@ window.loadMoreHistory = async function(offset) {
       div.innerHTML = `<div class="hist-item-header"><span class="hist-item-topic">${escHtml(item.topic || '(custom prompt)')}</span><span class="hist-item-time">${escHtml(dateStr)}</span><button class="hist-item-del" onclick="event.stopPropagation();deleteHistoryItem('${item.id}')" title="Delete" aria-label="Delete run">✕</button></div><div class="hist-item-models">${escHtml(stats.map(m => m.name).join(', ') || 'No models')}</div><div class="hist-item-stats">${statChips}<span class="hist-readonly-badge">read-only</span></div>`;
       container.insertBefore(div, container.querySelector('.hist-pagination'));
     });
-    
+
     if (hasMore) {
       btn.disabled = false;
       btn.textContent = 'Load More';
@@ -814,11 +842,11 @@ function renderGalleryContent() {
   const gallery = EDUCATIONAL_CONTENT.promptGallery || [];
   const filter = document.getElementById('gallery-filter')?.value || '';
   const filtered = filter ? gallery.filter(p => p.category === filter) : gallery;
-  
+
   if (!filtered.length) {
     return `<div class="hist-empty fade-in">No prompts in this category.</div>`;
   }
-  
+
   return `<div class="gallery-grid">${filtered.map(p => `
     <div class="gallery-card fade-in" onclick="loadGalleryPrompt('${p.id}')" tabindex="0" role="button" aria-label="Load prompt: ${escHtml(p.title)}">
       <div class="gallery-card-tags">${p.tags.map(t => `<span class="gallery-tag">${escHtml(t)}</span>`).join('')}</div>
@@ -836,9 +864,9 @@ function renderGalleryContent() {
 
 function renderPlaygroundContent() {
   if (!STATE.adversarialPrompt) return `<div class="banner warning fade-in"><span class="banner-icon">⚠</span><span>No adversarial prompt to mutate. Run a generation first.</span></div>`;
-  
+
   const variants = generatePromptVariants(STATE.adversarialPrompt, 5);
-  
+
   return `
   <div class="banner info fade-in" style="margin-bottom:1rem">
     <span class="banner-icon">🔬</span>
@@ -869,16 +897,16 @@ function renderVerificationContent() {
   if (STATE.verificationLoading) {
     return `<div class="viz-loading fade-in">Verifying claims via web search…</div>${skeleton('sentence', 3)}`;
   }
-  
+
   if (!STATE.verificationResults) {
     return `<div class="hist-empty fade-in">No verification results yet.<br><span style="font-size:.75rem">Click Verify to check flagged sentences against web sources.</span></div>`;
   }
-  
+
   const results = STATE.verificationResults;
   const verifiedCount = results.filter(r => r.verified === true).length;
   const refutedCount = results.filter(r => r.verified === false).length;
   const unknownCount = results.filter(r => r.verified === null).length;
-  
+
   return `
   <div class="verify-summary fade-in" style="display:flex;gap:.5rem;margin-bottom:1rem">
     <div class="stat-card"><div class="stat-value" style="color:var(--c-green-tx)">${verifiedCount}</div><div class="stat-label">Supported</div></div>
@@ -895,7 +923,7 @@ function renderVerificationContent() {
       <div class="verify-summary-text" style="font-size:.75rem;color:var(--text-sec);line-height:1.5">${escHtml(r.summary)}</div>
       ${r.sources?.length ? `<div class="verify-sources" style="margin-top:.375rem;padding-top:.375rem;border-top:1px solid var(--border);font-size:.6875rem;color:var(--text-muted)">
         <strong>Sources:</strong>
-        ${r.sources.slice(0, 3).map(s => `<div style="margin-top:.25rem;line-height:1.4">• ${escHtml(s)}</div>`).join('')}
+        ${r.sources.slice(0, 3).map(s => `<div style="margin-top:.375rem;line-height:1.45">• <a href="${s.url}" target="_blank" style="color:var(--purple);text-decoration:underline;font-weight:500">${escHtml(s.title || s.url)}</a> <span style="opacity:.65">(${s.source})</span><br><span style="color:var(--text-sec);font-size:.6875rem;display:block;margin-top:2px;margin-left:8px">${escHtml(s.snippet)}</span></div>`).join('')}
       </div>` : ''}
     </div>`).join('')}</div>`;
 }

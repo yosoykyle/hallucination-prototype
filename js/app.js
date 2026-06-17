@@ -57,7 +57,7 @@ function handleFocusTrap(e) {
 let STATE = {
   topic: '', inputMode: 'topic', customPrompt: '', contextInjector: '',
   showContextInjector: false,
-  waitingForReview: false, reviewPrompt: null, reviewWhyItWorks: null,
+  waitingForReview: false, reviewPrompt: null, reviewPromptOriginal: null, reviewWhyItWorks: null,
   loading: false, loadingStep: 0, error: null,
   adversarialPrompt: null, whyItWorks: null,
   hallucinatorResults: [], activeResultId: null,
@@ -107,11 +107,11 @@ async function autoSaveSessionState() {
 
 // ── Theme system (6 themes with particle effects) ─────────────────────────────
 
-const THEME_EFFECTS = { fireworks:1, sakura:1, stargazer:1, aurora:1 };
+const THEME_EFFECTS = { fireworks: 1, sakura: 1, stargazer: 1, aurora: 1 };
 
 function setTheme(themeId) {
   document.documentElement.setAttribute('data-theme', themeId);
-  try { localStorage.setItem('hallucination-theme', themeId); } catch(e) {}
+  try { localStorage.setItem('hallucination-theme', themeId); } catch (e) { }
   // Start/stop particle engines
   if (THEME_EFFECTS[themeId]) {
     ParticleEngine.start(themeId);
@@ -133,9 +133,9 @@ function initTheme() {
   let theme = 'midnight';
   try {
     const saved = localStorage.getItem('hallucination-theme');
-    const valid = ['midnight','daybreak','fireworks','sakura','stargazer','aurora','synthwave','anime'];
+    const valid = ['midnight', 'daybreak', 'fireworks', 'sakura', 'stargazer', 'aurora', 'synthwave', 'anime'];
     if (valid.includes(saved)) theme = saved;
-  } catch(e) {}
+  } catch (e) { }
   document.documentElement.setAttribute('data-theme', theme);
   if (THEME_EFFECTS[theme]) {
     setTimeout(() => ParticleEngine.start(theme), 100);
@@ -152,13 +152,13 @@ function handleSubtitleClick() {
 
 // ── Topic easter egg triggers ────────────────────────────────────
 const TOPIC_EGGS = {
-  'cow level':  '🐄 There is no cow level. But you found the secret!',
-  'dragon':     '🐉 OVER 9000!!! ...I mean, generating now.',
-  ' 42':        '🤔 The answer to life, the universe, and everything is 42. But what was the question?',
-  'the cake':   '🎂 The cake is a lie. The hallucination is real, though.',
+  'cow level': '🐄 There is no cow level. But you found the secret!',
+  'dragon': '🐉 OVER 9000!!! ...I mean, generating now.',
+  ' 42': '🤔 The answer to life, the universe, and everything is 42. But what was the question?',
+  'the cake': '🎂 The cake is a lie. The hallucination is real, though.',
   'monkey island': '🏴‍☠️ I can see you\'re a fan of adventure games. How appropriate, you fight like a dairy farmer!',
-  'zelda':      '🗡️ It\'s dangerous to go alone! Take this analysis.',
-  'one piece':  '🏴‍☠️ The One Piece is real! (The hallucination, that is.)',
+  'zelda': '🗡️ It\'s dangerous to go alone! Take this analysis.',
+  'one piece': '🏴‍☠️ The One Piece is real! (The hallucination, that is.)',
 };
 function checkTopicEgg(topic) {
   const lower = topic.toLowerCase();
@@ -184,7 +184,7 @@ function handleLogoClick() {
       setTimeout(() => {
         const el = document.createElement('div');
         el.className = 'easter-sparkle';
-        el.textContent = ['✨','⭐','🌟','💫','⬡','◆'][Math.floor(Math.random() * 6)];
+        el.textContent = ['✨', '⭐', '🌟', '💫', '⬡', '◆'][Math.floor(Math.random() * 6)];
         el.style.left = (Math.random() * 80 + 10) + 'vw';
         el.style.top = (Math.random() * 60 + 20) + 'vh';
         document.body.appendChild(el);
@@ -198,7 +198,7 @@ function handleLogoClick() {
 // ── Konami code easter egg ────────────────────────────────────────
 let _konamiBuffer = [];
 document.addEventListener('keydown', function _konamiListener(e) {
-  const code = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  const code = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
   _konamiBuffer.push(e.key);
   if (_konamiBuffer.length > code.length) _konamiBuffer.shift();
   if (_konamiBuffer.length === code.length && _konamiBuffer.every((k, i) => k === code[i])) {
@@ -317,6 +317,10 @@ async function handleGenerate(topicOverride) {
     if (!prompt) { setError('Please write a prompt first.'); return; }
     if (!validateReadyToRun()) return;
     STATE.error = null;
+    STATE.whyItWorks = null;
+    STATE.reviewPrompt = null;
+    STATE.reviewPromptOriginal = null;
+    STATE.reviewWhyItWorks = null;
     await runHallucinatorsWithPrompt(prompt, null, null);
     return;
   }
@@ -330,6 +334,7 @@ async function handleGenerate(topicOverride) {
   _abortController = new AbortController();
   setState({
     loading: true, loadingStep: 1, error: null, adversarialPrompt: null, whyItWorks: null,
+    reviewPrompt: null, reviewPromptOriginal: null, reviewWhyItWorks: null,
     hallucinatorResults: [], activeResultId: null, cmActiveIdx: null,
     gameStates: {}, expandedSentences: {}, manualOverrides: {}, waitingForReview: false, isReadOnly: false
   });
@@ -338,7 +343,7 @@ async function handleGenerate(topicOverride) {
     const pd = JSON.parse(stripMarkdown(raw));
 
     if (STATE.inputMode === 'review') {
-      setState({ loading: false, loadingStep: 0, reviewPrompt: pd.prompt, reviewWhyItWorks: pd.why_it_works, waitingForReview: true });
+      setState({ loading: false, loadingStep: 0, reviewPrompt: pd.prompt, reviewPromptOriginal: pd.prompt, reviewWhyItWorks: pd.why_it_works, waitingForReview: true, whyItWorks: null });
       return;
     }
     await runHallucinatorsWithPrompt(pd.prompt, pd.why_it_works, topic);
@@ -351,10 +356,12 @@ async function handleGenerate(topicOverride) {
 async function handleRunReview() {
   const prompt = document.getElementById('review-prompt-textarea')?.value?.trim();
   if (!prompt) return;
+  const isUnchanged = prompt === STATE.reviewPromptOriginal;
   STATE.reviewPrompt = prompt;
   STATE.waitingForReview = false;
+  STATE.whyItWorks = isUnchanged ? STATE.reviewWhyItWorks : null;
   _abortController = new AbortController();
-  await runHallucinatorsWithPrompt(prompt, STATE.reviewWhyItWorks, STATE.topic);
+  await runHallucinatorsWithPrompt(prompt, isUnchanged ? STATE.reviewWhyItWorks : null, STATE.topic);
 }
 
 async function handleRegenerateReview() {
@@ -371,7 +378,7 @@ async function runHallucinatorsWithPrompt(prompt, whyItWorks, topic) {
   const ctxPrefix = STATE.contextInjector.trim() ? STATE.contextInjector.trim() + '\n\n' : '';
   const fullPrompt = ctxPrefix + prompt;
 
-  setState({ loading: true, loadingStep: 2, adversarialPrompt: prompt, whyItWorks: whyItWorks || STATE.whyItWorks, hallucinatorResults: initial, manualOverrides: {}, expandedSentences: {} });
+  setState({ loading: true, loadingStep: 2, adversarialPrompt: prompt, whyItWorks: whyItWorks, hallucinatorResults: initial, manualOverrides: {}, expandedSentences: {} });
 
   const hallucinatorResponses = await Promise.allSettled(
     ready.map(h => {
@@ -507,7 +514,7 @@ function showToast(message, type = 'info', duration = 3200, onRetry = null) {
 }
 
 function withErrorBoundary(fn, context) {
-  return async function(...args) {
+  return async function (...args) {
     try {
       return await fn.apply(this, args);
     } catch (e) {
@@ -877,6 +884,66 @@ async function openVerifyPanel() {
 function closeVerifyPanel() { document.getElementById('verify-overlay').classList.add('hidden'); releaseFocus(); }
 function handleVerifyOverlayClick(e) { if (e.target === document.getElementById('verify-overlay')) closeVerifyPanel(); }
 
+async function verifySentenceInline(resultId, idx) {
+  const result = STATE.hallucinatorResults.find(r => r.id === resultId);
+  const sentence = result?.analysis?.[idx];
+  if (!sentence) return;
+
+  const containerId = `verify-inline-${resultId}-${idx}`;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = `<span style="font-size:.75rem;color:var(--text-muted)">🔍 Searching web sources...</span>`;
+
+  try {
+    const { verifySentence } = window.SearchAPI || {};
+    if (!verifySentence) throw new Error('SearchAPI not available');
+
+    const res = await verifySentence(sentence.text);
+    
+    // Evaluate correctness using key terms matching
+    const snippets = res.results.map(sr => sr.snippet).join(' ').toLowerCase();
+    const keyTerms = extractKeyTerms(sentence.text);
+    let matchCount = 0;
+    keyTerms.forEach(term => { if (snippets.includes(term.toLowerCase())) matchCount++; });
+    const confidence = keyTerms.length ? Math.round((matchCount / keyTerms.length) * 100) : 0;
+    
+    let verified = null;
+    if (confidence >= 60) verified = true;
+    else if (confidence <= 30 && res.results.length > 0) verified = false;
+
+    // Render inline results
+    const statusIcon = verified === true ? '✅' : verified === false ? '❌' : '❓';
+    const statusLabel = verified === true ? 'Supported' : verified === false ? 'Refuted' : 'Uncertain';
+    const statusColor = verified === true ? 'var(--c-green-tx)' : verified === false ? 'var(--c-red-tx)' : 'var(--c-gray-tx)';
+    
+    let sourcesHTML = '';
+    if (res.results.length) {
+      sourcesHTML = `<div style="margin-top:.375rem; font-size:.6875rem; color:var(--text-muted)">
+        <strong>Sources found:</strong><br>
+        ${res.results.slice(0, 3).map(sr => `• <a href="${sr.url}" target="_blank" style="color:var(--purple); text-decoration:underline">${escHtml(sr.title)}</a> (${sr.source})`).join('<br>')}
+      </div>`;
+    }
+
+    container.innerHTML = `
+      <div style="background:var(--card-raised); border:1px solid var(--border); border-radius:var(--r-sm); padding:.5rem; margin-top:.25rem">
+        <div style="display:flex; align-items:center; gap:.5rem">
+          <span style="font-size:.875rem">${statusIcon}</span>
+          <span style="font-weight:600; font-size:.8125rem; color:${statusColor}">${statusLabel}</span>
+          <span style="margin-left:auto; font-family:var(--font-mono); font-size:.6875rem; color:var(--text-muted)">${confidence}% match</span>
+        </div>
+        ${sourcesHTML}
+      </div>`;
+    
+    showToast('Inline verification complete', 'success');
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = `<button class="btn-ghost btn-sm" data-action="verify-claim-inline" data-result-id="${resultId}" data-idx="${idx}">🔍 Retry Verification</button>
+      <div style="font-size:.6875rem; color:var(--c-red-tx); margin-top:.25rem">Verification failed: ${escHtml(e.message)}</div>`;
+    showToast('Inline verification failed: ' + e.message, 'error');
+  }
+}
+
 // ── Enhanced Export ────────────────────────────────────────────────────────────
 
 function exportCSV() {
@@ -1024,7 +1091,7 @@ async function batchVerifyClaims(sentences, signal) {
     let verified = null;
     if (confidence >= 60) verified = true;
     else if (confidence <= 30 && data.results.length > 0) verified = false;
-    return { verified, sources: data.results.map(sr => sr.snippet), summary: data.results.length ? `${data.results.length} sources found` : 'No sources found', confidence };
+    return { sentence, verified, sources: data.results, summary: data.results.length ? `${data.results.length} sources found` : 'No sources found', confidence };
   });
 }
 
@@ -1122,6 +1189,11 @@ document.addEventListener('click', function (e) {
   if (!e.target.closest('.export-wrap')) closeExportMenu();
   // Close theme menu when clicking outside
   if (!e.target.closest('.theme-selector-wrap')) closeThemeMenu();
+  // Close tools and share menus when clicking outside
+  if (!e.target.closest('.dropdown-wrap')) {
+    document.getElementById('tools-menu')?.classList.add('hidden');
+    document.getElementById('share-menu')?.classList.add('hidden');
+  }
 
   const el = e.target.closest('[data-action]');
   const action = el?.dataset?.action;
@@ -1134,28 +1206,49 @@ document.addEventListener('click', function (e) {
     case 'subtitle-click': handleSubtitleClick(); break;
     case 'generate': handleGenerate(); break;
     case 'suggest': handleGenerate(el.dataset.topic); break;
-    case 'set-input-mode': setState({ inputMode: el.dataset.mode, error: null }); break;
+    case 'set-input-mode': setState({
+      inputMode: el.dataset.mode,
+      error: null,
+      waitingForReview: false,
+      reviewPrompt: null,
+      reviewPromptOriginal: null,
+      reviewWhyItWorks: null,
+    }); break;
     case 'toggle-context': setState({ showContextInjector: !STATE.showContextInjector }); break;
+    case 'toggle-advanced': setState({ showAdvancedOptions: !STATE.showAdvancedOptions }); break;
+    case 'toggle-prompt-exp': setState({ showPromptExplanation: !STATE.showPromptExplanation }); break;
+    case 'set-inspect-submode': setState({ inspectSubMode: el.dataset.submode, cmActiveIdx: null }); break;
+    case 'set-sandbox-submode': setState({ sandboxSubMode: el.dataset.submode }); break;
+    case 'load-welcome-prompt': loadGalleryPrompt(el.dataset.promptId); break;
+    case 'verify-claim-inline': verifySentenceInline(el.dataset.resultId, parseInt(el.dataset.idx, 10)); break;
+    case 'toggle-tools':
+      document.getElementById('tools-menu')?.classList.toggle('hidden');
+      document.getElementById('share-menu')?.classList.add('hidden');
+      break;
+    case 'toggle-share':
+      document.getElementById('share-menu')?.classList.toggle('hidden');
+      document.getElementById('tools-menu')?.classList.add('hidden');
+      break;
     case 'run-review': handleRunReview(); break;
     case 'regenerate-review': handleRegenerateReview(); break;
     case 'cancel-generation': cancelGeneration(); break;
     case 'open-settings': openSettings(); break;
-    case 'open-ref': openRefPanel(); break;
+    case 'open-ref': openRefPanel(); document.getElementById('tools-menu')?.classList.add('hidden'); break;
     case 'open-hist': openHistPanel(); break;
-    case 'open-gallery': openGalleryPanel(); break;
+    case 'open-gallery': openGalleryPanel(); document.getElementById('tools-menu')?.classList.add('hidden'); break;
     case 'open-playground': openPlayground(); break;
     case 'open-verify': openVerifyPanel(); break;
-    case 'enter-presentation': enterPresentation(); break;
+    case 'enter-presentation': enterPresentation(); document.getElementById('share-menu')?.classList.add('hidden'); break;
     case 'exit-readonly': setState({ isReadOnly: false, adversarialPrompt: null, hallucinatorResults: [], activeResultId: null, error: null }); break;
     case 'toggle-export': document.getElementById('export-menu')?.classList.toggle('hidden'); break;
-    case 'copy-summary': copyRunSummary(); break;
-    case 'open-tour': openTour(); break;
-    case 'open-quiz': openQuiz(); break;
-    case 'export-json': exportJSON(); break;
-    case 'export-csv': exportCSV(); break;
-    case 'export-jsonl': exportJSONL(); break;
-    case 'export-case-study': exportCaseStudy(); break;
-    case 'print-pdf': triggerPrint(); break;
+    case 'copy-summary': copyRunSummary(); document.getElementById('share-menu')?.classList.add('hidden'); break;
+    case 'open-tour': openTour(); document.getElementById('tools-menu')?.classList.add('hidden'); break;
+    case 'open-quiz': openQuiz(); document.getElementById('tools-menu')?.classList.add('hidden'); break;
+    case 'export-json': exportJSON(); document.getElementById('share-menu')?.classList.add('hidden'); break;
+    case 'export-csv': exportCSV(); document.getElementById('share-menu')?.classList.add('hidden'); break;
+    case 'export-jsonl': exportJSONL(); document.getElementById('share-menu')?.classList.add('hidden'); break;
+    case 'export-case-study': exportCaseStudy(); document.getElementById('share-menu')?.classList.add('hidden'); break;
+    case 'print-pdf': triggerPrint(); document.getElementById('share-menu')?.classList.add('hidden'); break;
     case 'select-result': setState({ activeResultId: el.dataset.resultId, cmActiveIdx: null }); break;
     case 'set-mode': setState({ activeMode: el.dataset.mode, cmActiveIdx: null }); break;
     case 'cm-select': {
@@ -1171,9 +1264,11 @@ document.addEventListener('click', function (e) {
 });
 
 document.addEventListener('input', function (e) {
-  if (e.target.id === 'topic-input') STATE.topic = e.target.value;
-  if (e.target.id === 'custom-prompt-input') STATE.customPrompt = e.target.value;
-  if (e.target.id === 'context-injector-input') STATE.contextInjector = e.target.value;
+  const updates = {};
+  if (e.target.id === 'topic-input') updates.topic = e.target.value;
+  if (e.target.id === 'custom-prompt-input') updates.customPrompt = e.target.value;
+  if (e.target.id === 'context-injector-input') updates.contextInjector = e.target.value;
+  if (Object.keys(updates).length) setState({ ...STATE, ...updates });
 
   // Auto-save settings fields (debounced)
   // All settings fields live inside #settings-content — the closest() check
