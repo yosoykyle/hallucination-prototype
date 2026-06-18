@@ -1,5 +1,5 @@
 {
-  "name": "AI Hallucination Prototype",
+  "name": "Delulu Detector",
   "short_name": "HallucinationLab",
   "description": "Induce, analyze, and visualize AI hallucinations across multiple models",
   "start_url": ".",
@@ -14,5 +14,9 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["developer", "education", "utilities"]
+  "categories": [
+    "developer",
+    "education",
+    "utilities"
+  ]
 }

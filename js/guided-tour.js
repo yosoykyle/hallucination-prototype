@@ -5,7 +5,7 @@
 const GUIDED_TOUR_STEPS = [
   {
     id: 'welcome',
-    title: 'Welcome to the Hallucination Prototype',
+    title: 'Welcome to the Delulu Detector',
     content: `
       <p>This tool helps you <strong>induce, analyze, and visualize</strong> AI hallucinations across multiple models simultaneously.</p>
       <p>You'll learn to:</p>

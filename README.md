@@ -1,4 +1,4 @@
-# AI Hallucination Prototype
+# Delulu Detector
 
 A browser-based tool to induce, analyze, and visualize AI hallucinations across multiple models simultaneously. No server, no build step — clone and open `index.html`.
 
@@ -50,7 +50,7 @@ No server, no `npm install`, no build step required. All libraries load from CDN
 | OpenAI | No | [platform.openai.com](https://platform.openai.com) | `sk-...` |
 | Ollama | Free ✓ | [ollama.com](https://ollama.com) | *(no key needed)* |
 
-**Recommended setup for zero cost:** Groq or OpenRouter key for both the analyst and hallucinators. OpenRouter offers many free models — try `meta-llama/llama-3.1-8b-instant:free` or `mistralai/mistral-7b-instruct:free`.
+**Recommended setup for zero cost:** Groq or OpenRouter key for both the analyst and hallucinators. OpenRouter offers many free models — try `meta-llama/llama-3.3-70b-instruct:free` or `google/gemma-4-31b-it:free`.
 
 ---
 

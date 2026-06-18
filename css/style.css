@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────
-   style.css  —  AI Hallucination Prototype (Enhanced)
+   style.css  —  Delulu Detector (Enhanced)
    ───────────────────────────────────────────────────────────────── */
 
 *,
@@ -342,32 +342,9 @@
   --theme-glow: rgba(0, 212, 255, .12);
 }
 
-/* Synthwave background grid + retro sun */
-[data-theme="synthwave"] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 107, 157, .08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, .08) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-[data-theme="synthwave"] body::after {
-  content: '';
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 0;
-  pointer-events: none;
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(ellipse at center bottom, #FF6B9D 0%, #FF3366 30%, transparent 70%);
-  border-radius: 50%;
-  opacity: .12;
+/* Synthwave background particle canvas container z-index behind content */
+[data-theme="synthwave"] #particle-overlay {
+  z-index: -1;
 }
 
 [data-theme="synthwave"] #app-root {
@@ -842,42 +819,52 @@
 
 /* ── Synthwave: Neon glow, chunky retro, scanlines & uppercase ──── */
 [data-theme="synthwave"] {
-  --r: 6px;
-  --r-sm: 3px;
-  --r-lg: 10px;
+  --r: 4px;      /* Chunky retro hardware border-radius */
+  --r-sm: 2px;
+  --r-lg: 6px;
 }
 
 [data-theme="synthwave"] body {
   letter-spacing: .02em;
 }
 
+/* 90s dual-tone chromatic text-shadow */
 [data-theme="synthwave"] .app-title {
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  text-shadow: 0 0 10px var(--purple), 0 0 30px var(--purple-dim), 0 0 60px rgba(255, 107, 157, .2);
+  letter-spacing: .1em;
+  font-family: var(--font-mono);
+  color: #00D4FF;
+  text-shadow: 
+    3px 3px 0px #FF3366, 
+    -1px -1px 0px #A855F7, 
+    0 0 20px rgba(0, 212, 255, 0.6);
 }
 
 [data-theme="synthwave"] .app-subtitle {
   text-transform: uppercase;
-  letter-spacing: .18em;
-  font-size: .5rem;
+  letter-spacing: .24em;
+  font-size: .55rem;
+  color: #FF6B9D;
+  text-shadow: 0 0 8px rgba(255, 107, 157, 0.5);
 }
 
 [data-theme="synthwave"] .app-logo {
   background: linear-gradient(135deg, #FF6B9D, #00D4FF);
-  border: none;
-  box-shadow: 0 0 20px #FF6B9D, 0 0 40px #00D4FF;
-  animation: synthwaveLogoGlow 2s ease-in-out infinite alternate;
+  border: 2px solid #00D4FF;
+  box-shadow: 0 0 20px #FF6B9D, 0 0 40px #00D4FF, inset 0 0 10px rgba(255, 255, 255, 0.5);
+  animation: synthwaveLogoGlow 2.5s ease-in-out infinite alternate;
+  border-radius: 4px;
 }
 
 @keyframes synthwaveLogoGlow {
   0% {
-    box-shadow: 0 0 20px #FF6B9D, 0 0 40px #00D4FF
+    box-shadow: 0 0 15px #FF6B9D, 0 0 30px #00D4FF, inset 0 0 5px rgba(255, 255, 255, 0.3);
+    transform: scale(1);
   }
-
   100% {
-    box-shadow: 0 0 30px #FF6B9D, 0 0 60px #00D4FF
+    box-shadow: 0 0 30px #FF6B9D, 0 0 60px #00D4FF, inset 0 0 15px rgba(255, 255, 255, 0.7);
+    transform: scale(1.05);
   }
 }
 
@@ -885,212 +872,396 @@
 [data-theme="synthwave"] .field-label,
 [data-theme="synthwave"] .mono {
   letter-spacing: .12em;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  color: #C090E0;
 }
 
+/* Retro arcade primary button style */
 [data-theme="synthwave"] .btn-primary {
-  background: linear-gradient(135deg, #FF6B9D, #FF3366);
-  border: 2px solid #FF6B9D;
+  background: linear-gradient(90deg, #FF3366, #FF6B9D);
+  border: 2px solid #FF9EC4;
   text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .1em;
   font-weight: 700;
-  font-size: .75rem;
-  box-shadow: 0 0 16px rgba(255, 107, 157, .3), inset 0 0 16px rgba(255, 107, 157, .1);
+  font-family: var(--font-mono);
+  box-shadow: 0 0 12px rgba(255, 51, 102, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 [data-theme="synthwave"] .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 24px #FF6B9D, inset 0 0 20px rgba(255, 107, 157, .15);
+  background: linear-gradient(90deg, #FF6B9D, #00D4FF);
+  border-color: #00D4FF;
+  box-shadow: 0 0 22px rgba(0, 212, 255, 0.75), inset 0 0 12px rgba(255, 255, 255, 0.4);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+[data-theme="synthwave"] .btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
 [data-theme="synthwave"] .btn-ghost {
-  border: 2px solid var(--purple-dim);
+  border: 2px solid var(--border);
+  background: rgba(28, 10, 58, 0.4);
   letter-spacing: .06em;
   font-size: .75rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  color: #F0D8FF;
 }
 
-[data-theme="synthwave"] .model-card {
-  border: 2px solid var(--border);
+[data-theme="synthwave"] .btn-ghost:hover:not(:disabled) {
+  border-color: #FF6B9D;
+  color: #FF6B9D;
+  box-shadow: 0 0 10px rgba(255, 107, 157, 0.25);
+}
+
+/* Chunky retro double border and grid-glow for panels and cards */
+[data-theme="synthwave"] .welcome-step,
+[data-theme="synthwave"] .sc,
+[data-theme="synthwave"] .stat-card,
+[data-theme="synthwave"] .model-card,
+[data-theme="synthwave"] .prompt-card,
+[data-theme="synthwave"] .loading-panel,
+[data-theme="synthwave"] .threshold-strip,
+[data-theme="synthwave"] .gallery-card,
+[data-theme="synthwave"] .review-panel,
+[data-theme="synthwave"] .game-score,
+[data-theme="synthwave"] .gs,
+[data-theme="synthwave"] .cm-text-block,
+[data-theme="synthwave"] .cm-legend,
+[data-theme="synthwave"] .cm-detail,
+[data-theme="synthwave"] .metric-card,
+[data-theme="synthwave"] .comparison-table,
+[data-theme="synthwave"] .viz-container,
+[data-theme="synthwave"] .side-panel,
+[data-theme="synthwave"] .modal {
+  border: 3px double var(--border) !important;
+  background: rgba(28, 10, 58, 0.85) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.5),
+    inset 0 0 15px rgba(168, 85, 247, 0.05);
 }
 
 [data-theme="synthwave"] .model-card.active {
-  border-color: #00D4FF;
-  box-shadow: 0 0 16px rgba(0, 212, 255, .2), inset 0 0 16px rgba(0, 212, 255, .05);
+  border: 3px double #00D4FF !important;
+  border-color: #00D4FF !important;
+  box-shadow: 
+    0 0 18px rgba(0, 212, 255, 0.4), 
+    inset 0 0 12px rgba(0, 212, 255, 0.15) !important;
+  animation: synthwaveCardPulse 2s infinite alternate;
+}
+
+@keyframes synthwaveCardPulse {
+  0% {
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3), inset 0 0 10px rgba(0, 212, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), inset 0 0 15px rgba(0, 212, 255, 0.2);
+  }
 }
 
 [data-theme="synthwave"] .mode-tab {
-  letter-spacing: .06em;
+  letter-spacing: .08em;
   font-size: .75rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
 }
 
 [data-theme="synthwave"] .mode-tab.active {
-  text-shadow: 0 0 8px var(--purple);
+  text-shadow: 0 0 8px #FF6B9D;
+  color: #FF6B9D;
 }
 
 [data-theme="synthwave"] .chip {
-  border: 1.5px solid var(--purple-dim);
+  border: 1.5px solid var(--border);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
 }
 
 [data-theme="synthwave"] .stat-value {
-  text-shadow: 0 0 10px var(--theme-glow);
+  color: #00D4FF;
+  font-family: var(--font-mono);
+  text-shadow: 
+    0 0 8px rgba(0, 212, 255, 0.6),
+    0 0 18px rgba(0, 212, 255, 0.3);
 }
 
 [data-theme="synthwave"] .banner {
-  border: 2px solid;
-}
-
-[data-theme="synthwave"] .welcome-step {
-  border: 2px solid var(--border);
+  border: 3px double #FF3366;
+  background: rgba(46, 10, 40, 0.6) !important;
 }
 
 [data-theme="synthwave"] :focus-visible {
   outline: 2px solid #00D4FF;
   outline-offset: 3px;
-  box-shadow: 0 0 12px rgba(0, 212, 255, .3);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
 }
 
-/* Subtle scanline overlay */
+/* CRT monitor simulation with subtle screen flicker & scanlines */
 [data-theme="synthwave"] body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
+  background: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.05) 2px, rgba(0, 0, 0, 0.05) 4px),
+    radial-gradient(circle, transparent 70%, rgba(18, 5, 43, 0.3) 100%);
+  animation: synthwaveFlicker 0.15s infinite alternate;
+  opacity: 0.85;
+}
+
+@keyframes synthwaveFlicker {
+  0% {
+    opacity: 0.83;
+  }
+  100% {
+    opacity: 0.87;
+  }
 }
 
 /* ── Anime: Impact, action lines & bold energy ──────────────────── */
 [data-theme="anime"] {
-  --r: 8px;
-  --r-sm: 4px;
-  --r-lg: 12px;
+  --r: 4px;
+  --r-sm: 2px;
+  --r-lg: 6px;
 }
 
 [data-theme="anime"] body {
   letter-spacing: .01em;
 }
 
+/* Manga chromatic text-shadow */
 [data-theme="anime"] .app-title {
-  font-weight: 800;
-  letter-spacing: -.02em;
+  font-weight: 900;
+  letter-spacing: -.03em;
   text-transform: uppercase;
-  text-shadow: 2px 2px 0 var(--purple-dim), 0 0 20px var(--theme-glow);
+  color: #FFFFFF;
+  text-shadow: 
+    3px 3px 0 var(--purple-dim), 
+    -2px -2px 0 #FF7A30, 
+    0 0 15px rgba(255, 122, 48, 0.45);
 }
 
 [data-theme="anime"] .app-subtitle {
-  letter-spacing: .1em;
+  letter-spacing: .12em;
   font-size: .5625rem;
-  font-weight: 600;
+  font-weight: 800;
+  color: #30D0FF;
+  text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+  text-transform: uppercase;
 }
 
 [data-theme="anime"] .app-logo {
-  background: linear-gradient(135deg, #FF7A30, #30D0FF);
-  border: none;
-  animation: animeLogoImpact 1.5s ease-in-out infinite;
+  background: url('../anime-girl-happy.png') no-repeat center/contain !important;
+  color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+  border-radius: 0 !important;
+  animation: animeLogoImpact 2s ease-in-out infinite;
+}
+
+[data-theme="anime"] .welcome-logo {
+  background: url('../anime-girl.png') no-repeat center/contain !important;
+  color: transparent !important;
+  border: none !important;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 1.5rem !important;
+  box-shadow: none !important;
+  animation: animeMascotFloat 4s ease-in-out infinite;
 }
 
 @keyframes animeLogoImpact {
-
-  0%,
-  100% {
-    transform: scale(1) rotate(0deg)
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
   }
-
   25% {
-    transform: scale(1.1) rotate(-5deg)
+    transform: scale(1.08) rotate(-6deg);
   }
-
   75% {
-    transform: scale(1.1) rotate(5deg)
+    transform: scale(1.08) rotate(6deg);
   }
 }
 
+/* Comic / Manga card and panel borders and solid drop-shadows */
+[data-theme="anime"] .welcome-step,
+[data-theme="anime"] .sc,
+[data-theme="anime"] .stat-card,
+[data-theme="anime"] .model-card,
+[data-theme="anime"] .prompt-card,
+[data-theme="anime"] .loading-panel,
+[data-theme="anime"] .threshold-strip,
+[data-theme="anime"] .gallery-card,
+[data-theme="anime"] .review-panel,
+[data-theme="anime"] .game-score,
+[data-theme="anime"] .gs,
+[data-theme="anime"] .cm-text-block,
+[data-theme="anime"] .cm-legend,
+[data-theme="anime"] .cm-detail,
+[data-theme="anime"] .metric-card,
+[data-theme="anime"] .comparison-table,
+[data-theme="anime"] .viz-container,
+[data-theme="anime"] .side-panel,
+[data-theme="anime"] .modal {
+  border: 3px solid #1C3050 !important;
+  background: rgba(14, 26, 48, 0.92) !important;
+  box-shadow: 5px 5px 0px #0A1424 !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="anime"] .model-card.active {
+  border-color: #FF7A30 !important;
+  box-shadow: 7px 7px 0px #FF7A30 !important;
+  transform: translate(-3px, -3px);
+}
+
+[data-theme="anime"] .sc-summary:hover,
+[data-theme="anime"] .gallery-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px #0A1424 !important;
+}
+
+/* Manga action primary button */
 [data-theme="anime"] .btn-primary {
   background: linear-gradient(135deg, #FF7A30, #FF4A60);
-  border: 2px solid #FF7A30;
+  border: 3px solid #1C3050;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .05em;
-  font-size: .75rem;
-  box-shadow: 4px 4px 0 var(--purple-dim);
-  transition: all .1s ease;
+  letter-spacing: .08em;
+  font-family: var(--font-sans);
+  color: #FFFFFF;
+  box-shadow: 4px 4px 0 #14243E;
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 [data-theme="anime"] .btn-primary:hover:not(:disabled) {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--purple-dim);
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0 #14243E;
+  background: linear-gradient(135deg, #FF8F4D, #FF6175);
 }
 
 [data-theme="anime"] .btn-primary:active:not(:disabled) {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--purple-dim);
+  box-shadow: 2px 2px 0 #14243E;
 }
 
 [data-theme="anime"] .btn-ghost {
-  border: 2px solid var(--border);
-  font-weight: 600;
-  letter-spacing: .03em;
+  border: 3px solid #1C3050;
+  background: rgba(16, 26, 48, 0.6);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #90A8CC;
+  box-shadow: 3px 3px 0 #14243E;
+  transition: all 0.15s ease;
 }
 
-[data-theme="anime"] .model-card {
-  border: 2px solid var(--border);
-}
-
-[data-theme="anime"] .model-card.active {
-  border-color: #FF7A30;
-  box-shadow: 4px 4px 0 var(--purple-dim);
-  transform: translate(-2px, -2px);
+[data-theme="anime"] .btn-ghost:hover:not(:disabled) {
+  color: #30D0FF;
+  border-color: #30D0FF;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #14243E;
 }
 
 [data-theme="anime"] .mode-tab {
-  font-weight: 600;
-  letter-spacing: .04em;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
 [data-theme="anime"] .mode-tab.active {
-  text-shadow: 2px 2px 0 var(--purple-dim);
+  color: #FF7A30;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
 }
 
 [data-theme="anime"] .chip {
-  border: 2px solid var(--purple-dim);
-  font-weight: 600;
+  border: 2.5px solid #1C3050;
+  font-weight: 700;
+  background: rgba(14, 26, 48, 0.8);
+  box-shadow: 2px 2px 0px #14243E;
 }
 
 [data-theme="anime"] .stat-value {
-  -webkit-text-stroke: 1px var(--purple-dim);
-}
-
-[data-theme="anime"] .welcome-step {
-  border: 2px solid var(--border);
+  color: #FF7A30;
+  font-weight: 900;
+  text-shadow: 2px 2px 0px #14243E;
 }
 
 [data-theme="anime"] .banner {
-  border: 2px solid;
+  border: 3px solid #FF4A60;
+  background: rgba(40, 10, 20, 0.8) !important;
+  box-shadow: 4px 4px 0px #14243E !important;
 }
 
 [data-theme="anime"] :focus-visible {
-  outline: 3px solid var(--purple);
+  outline: 3px solid #FF7A30;
   outline-offset: 2px;
-  box-shadow: 4px 4px 0 var(--purple-dim);
+  box-shadow: 4px 4px 0 #14243E;
 }
 
-/* Action line accent on hoverable elements */
-[data-theme="anime"] .sc-summary:hover::after,
-[data-theme="anime"] .gallery-card:hover::after,
-[data-theme="anime"] .welcome-step:hover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 2px solid var(--purple);
-  border-radius: inherit;
-  animation: animeActionBorder .3s ease forwards;
+/* Manga style speech-bubble toasts */
+[data-theme="anime"] .toast {
+  background: #FFFFFF !important;
+  color: #0C1628 !important;
+  border: 3px solid #0C1628 !important;
+  box-shadow: 5px 5px 0px #FF7A30 !important;
+  border-radius: 12px !important;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.4;
+  padding: .75rem 1rem !important;
 }
 
-@keyframes animeActionBorder {
-  0% {
-    clip-path: inset(50% 50% 50% 50%)
+[data-theme="anime"] .toast-icon {
+  color: #FF4A60 !important;
+  font-size: 1.1rem;
+}
+
+/* Mascot floating and bump rules */
+.anime-mascot {
+  position: fixed;
+  left: 25px;
+  right: auto;
+  bottom: 25px;
+  width: 130px;
+  height: auto;
+  z-index: 999;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: animeMascotFloat 4s ease-in-out infinite;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease;
+  filter: drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.4));
+}
+
+.anime-mascot:hover {
+  transform: scale(1.08) translateY(-5px);
+  filter: drop-shadow(0px 12px 20px rgba(0, 0, 0, 0.5)) brightness(1.05);
+}
+
+.anime-mascot.mascot-bump {
+  animation: none;
+  transform: scale(1.25) rotate(-8deg);
+}
+
+@keyframes animeMascotFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
   }
-
-  100% {
-    clip-path: inset(0 0 0 0)
+  50% {
+    transform: translateY(-8px) rotate(2deg);
   }
 }
 

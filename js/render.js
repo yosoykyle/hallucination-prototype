@@ -142,7 +142,7 @@ function renderHeader() {
     <div class="app-title-wrap">
       <div class="app-logo logo-clickable" aria-hidden="true" data-action="logo-click">⬡</div>
       <div>
-        <div class="app-title">AI Hallucination Prototype</div>
+        <div class="app-title">Delulu Detector</div>
         <div class="app-subtitle" data-action="subtitle-click">${SUBTITLE_MSGS[STATE._subtitleEgg ?? 0]}</div>
       </div>
     </div>
@@ -197,7 +197,7 @@ function renderWelcome() {
   return `
   <div class="welcome fade-in">
     <div class="welcome-logo" aria-hidden="true">⬡</div>
-    <h2>AI Hallucination Prototype</h2>
+    <h2>Delulu Detector</h2>
     <p>Induce, analyze, and visualize AI hallucinations across multiple models simultaneously.</p>
     <div class="welcome-steps" role="list" aria-label="Getting started steps">
       <div class="welcome-step" role="listitem">

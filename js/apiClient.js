@@ -38,7 +38,7 @@ window.ApiClient = (function() {
 
       const promise = callWithRetry(async () => {
         const ctrl = new AbortController();
-        const timeoutMs = (config.provider === 'ollama') ? 120000 : 30000;
+        const timeoutMs = (config.provider === 'ollama') ? 120000 : 120000;
         const timer = setTimeout(() => ctrl.abort(), timeoutMs);
         let mergedSignal = ctrl.signal;
 

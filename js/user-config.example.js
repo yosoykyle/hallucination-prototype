@@ -82,7 +82,7 @@ const USER_CONFIG = {
       id:                 'h-openrouter-free',
       name:               'OpenRouter (free)',
       provider:           'openrouter',
-      model:              'mistralai/mistral-7b-instruct:free',   // or: meta-llama/llama-3.1-8b-instant:free, google/gemma-2-9b-it:free
+      model:              'meta-llama/llama-3.3-70b-instruct:free', // or: meta-llama/llama-3.2-3b-instruct:free, google/gemma-4-31b-it:free
       apiKey:             '',                   // ← Paste your OpenRouter key here
       baseUrl:            '',
       enabled:            false,
